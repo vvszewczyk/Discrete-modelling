@@ -23,7 +23,7 @@ public:
 		return this->height;
 	}
 
-	void initialize(const std::string& defaultState = "empty", bool defaultWall = false);
+	void initialize(bool defaultWall = false);
 
 
 	Cell& getCell(int x, int y);
@@ -33,6 +33,4 @@ public:
 	void collision();
 	void streaming();
 	void resetGrid();
-
-	void printGrid() const;
 };

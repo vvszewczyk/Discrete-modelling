@@ -66,9 +66,21 @@ void SimulationController::display()
 			{
 				glColor3f(0.2f, 0.2f, 0.2f);
 			}
-			else if (cell.getDirection(0))
+			else if (cell.getDirection(0)) // North
 			{
-				glColor3f(1.0f, 0.0f, 0.0f); // North
+				glColor3f(1.0f, 0.0f, 0.0f);
+			}
+			else if (cell.getDirection(1)) // East
+			{
+				glColor3f(0.0f, 1.0f, 0.0f);
+			}
+			else if (cell.getDirection(2)) // South
+			{
+				glColor3f(0.0f, 0.0f, 1.0f);
+			}
+			else if (cell.getDirection(3)) // West
+			{
+				glColor3f(1.0f, 1.0f, 0.0f);
 			}
 			else
 			{
@@ -83,24 +95,25 @@ void SimulationController::display()
 			);
 		}
 	}
-	// Rysowanie siatki (czarne linie)
-	glColor3f(0.0f, 0.0f, 0.0f); // Ustawienie koloru linii na czarny
-	glLineWidth(1.0f);           // Ustawienie szerokoœci linii na 1 piksel
+	// Drawing grid
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glLineWidth(1.0f);
 
 	glBegin(GL_LINES);
-	// Linie pionowe
-	for (int x = 0; x <= width; ++x) 
+	// Vertical lines
+	for (std::size_t x = 0; x <= width; ++x) 
 	{
 		int xPos = x * controller->cellSize;
-		glVertex2i(xPos, 0);                // Dolny punkt
-		glVertex2i(xPos, height * controller->cellSize); // Górny punkt
+		glVertex2i(xPos, 0);
+		glVertex2i(xPos, height * controller->cellSize);
 	}
-	// Linie poziome
-	for (int y = 0; y <= height; ++y) 
+
+	// Horizontal lines
+	for (std::size_t y = 0; y <= height; ++y)
 	{
 		int yPos = y * controller->cellSize;
-		glVertex2i(0, yPos);                // Lewy punkt
-		glVertex2i(width * controller->cellSize, yPos);  // Prawy punkt
+		glVertex2i(0, yPos);
+		glVertex2i(width * controller->cellSize, yPos);
 	}
 	glEnd();
 	glutSwapBuffers();

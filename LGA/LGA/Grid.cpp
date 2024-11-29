@@ -3,23 +3,26 @@
 #include <iostream>
 
 
-void Grid::initialize(const std::string& defaultState, bool defaultWall)
+void Grid::initialize(bool defaultWall)
 {
 	for (std::size_t y = 0; y < width; ++y)
 	{
 		for (std::size_t x = 0; x < height; ++x)
 		{
-			grid[y][x] = Cell(defaultState, defaultWall);
+			grid[y][x] = Cell(defaultWall);
 
 			if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
 			{
 				grid[y][x].setWall(true);
 			}
 
-			if (x == width / 6)
-			{
-				grid[y][x].setWall(true);
-			}
+            int wallColumn = width / 6; // Kolumna œciany
+            int gapStart = height / 3;  // Pocz¹tek otworu (np. 1/3 wysokoœci)
+            int gapEnd = 2 * height / 3; // Koniec otworu (np. 2/3 wysokoœci)
+            if (x == wallColumn && (y < gapStart || y > gapEnd))
+            {
+                grid[y][x].setWall(true);
+            }
 
 			if (!grid[y][x].getWall() && x < width / 6)
 			{
@@ -47,94 +50,126 @@ void Grid::setCell(int x, int y, Cell& cell)
 	grid[y][x] = cell;
 }
 
-
-void Grid::printGrid() const
-{
-	for (std::size_t y = 0; y < height; ++y)
-	{
-		for (std::size_t x = 0; x < width; ++x)
-		{
-			std::cout << "Cell(" << x << ", " << y << "): " << "State=" << grid[y][x].getState() << ", isWall=" << grid[y][x].getWall() << "\n";
-		}
-	}
-}
-
 void Grid::collision()
 {
-	for (std::size_t y = 0; y < height; ++y)
-	{
-		for (std::size_t x = 0; x < width; ++x)
-		{
-			Cell& cell = grid[y][x];
+    for (std::size_t y = 0; y < height; ++y)
+    {
+        for (std::size_t x = 0; x < width; ++x)
+        {
+            Cell& cell = grid[y][x];
 
-			if (cell.getDirection(0) && cell.getDirection(2)) // Collision between North and South cells
-			{
-				cell.setDirection(0, false);
-				cell.setDirection(2, false);
+            if (cell.getWall())
+            {
+                continue;
+            }
 
-				cell.setDirection(1, true); // East
-				cell.setDirection(3, true); // West
-			}
+            bool north = cell.getDirection(0);
+            bool east = cell.getDirection(1);
+            bool south = cell.getDirection(2);
+            bool west = cell.getDirection(3);
 
-			if (cell.getDirection(1) && cell.getDirection(3)) // Collision between East and West cells
-			{
-				cell.setDirection(1, false);
-				cell.setDirection(3, false);
-
-				cell.setDirection(0, true); // North
-				cell.setDirection(2, true); // South
-			}
-		}
-	}
+            // Collision 1: (1, 0, 1, 0) ? (0, 1, 0, 1)
+            if (north && south && !east && !west)
+            {
+                cell.setDirection(0, false);
+                cell.setDirection(2, false);
+                cell.setDirection(1, true);
+                cell.setDirection(3, true);
+            }
+            // Collision 2: (0, 1, 0, 1) ? (1, 0, 1, 0)
+            else if (east && west && !north && !south)
+            {
+                cell.setDirection(1, false);
+                cell.setDirection(3, false);
+                cell.setDirection(0, true); 
+                cell.setDirection(2, true); 
+            }
+        }
+    }
 }
+
 
 void Grid::streaming()
 {
-	std::vector<std::vector<Cell>> newGrid(height, std::vector<Cell>(width, Cell("empty", false)));
+    std::vector<std::vector<Cell>> newGrid = grid;
 
-	for (std::size_t y = 0; y < height; ++y)
-	{
-		for (std::size_t x = 0; x < width; ++x)
-		{
-			if(!newGrid[y][x].getWall())
-			{
-				newGrid[y][x].resetDirections();
-			}
-		}
-	}
+    // Reset directions on the new grid
+    for (std::size_t y = 0; y < height; ++y)
+    {
+        for (std::size_t x = 0; x < width; ++x)
+        {
+            if (!newGrid[y][x].getWall())
+            {
+                newGrid[y][x].resetDirections();
+            }
+        }
+    }
 
-	for (std::size_t y = 0; y < height; ++y)
-	{
-		for (std::size_t x = 0; x < width; ++x)
-		{
-			const Cell& cell = grid[y][x];
+    // Manage streaming and reflecting
+    for (std::size_t y = 0; y < height; ++y)
+    {
+        for (std::size_t x = 0; x < width; ++x)
+        {
+            const Cell& cell = grid[y][x];
 
-			if (cell.getWall())
-			{
-				continue;
-			}
-			
-			if (cell.getDirection(0) && y < height - 1)
-			{
-				newGrid[y + 1][x].setDirection(0, true);
-			}
+            if (cell.getWall())
+            {
+                continue;
+            }
 
-			if (cell.getDirection(1) && x < width - 1)
-			{
-				newGrid[y][x + 1].setDirection(1, true);
-			}
+            // North
+            if (cell.getDirection(0))
+            {
+                if (y < height - 1 && !grid[y + 1][x].getWall())
+                {
+                    newGrid[y + 1][x].setDirection(0, true); // Stream
+                }
+                else
+                {
+                    newGrid[y][x].setDirection(2, true); // Reflect
+                }
+            }
 
-			if (cell.getDirection(2) && y > 0)
-			{
-				newGrid[y - 1][x].setDirection(2, true);
-			}
+            // East
+            if (cell.getDirection(1))
+            {
+                if (x < width - 1 && !grid[y][x + 1].getWall())
+                {
+                    newGrid[y][x + 1].setDirection(1, true); // Stream
+                }
+                else
+                {
+                    newGrid[y][x].setDirection(3, true); // Reflect
+                }
+            }
 
-			if (cell.getDirection(3) && x > 0)
-			{
-				newGrid[y][x - 1].setDirection(3, true);
-			}
-		}
-	}
+            // South
+            if (cell.getDirection(2))
+            {
+                if (y > 0 && !grid[y - 1][x].getWall())
+                {
+                    newGrid[y - 1][x].setDirection(2, true); // Stream
+                }
+                else
+                {
+                    newGrid[y][x].setDirection(0, true); // Reflect
+                }
+            }
 
-	grid = newGrid;
+            // West
+            if (cell.getDirection(3))
+            {
+                if (x > 0 && !grid[y][x - 1].getWall())
+                {
+                    newGrid[y][x - 1].setDirection(3, true); // Stream
+                }
+                else
+                {
+                    newGrid[y][x].setDirection(1, true); // Reflect
+                }
+            }
+        }
+    }
+
+    grid = newGrid;
 }

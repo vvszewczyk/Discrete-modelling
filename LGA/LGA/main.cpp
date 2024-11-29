@@ -5,8 +5,8 @@
 int main(int argc, char** argv)
 {
 	// Grid size
-	const int gridWidth = 400;
-	const int gridHeight = 400;
+	const int gridWidth = 100;
+	const int gridHeight = 100;
 
 	// Window size
 	const int windowWidht = 800;
@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 	// Grid initializing
 	Grid grid(gridWidth, gridHeight);
 	grid.initialize();
-	grid.getCell(15, 15).setDirection(0, true);
+	grid.getCell(10, 15).setDirection(0, true);
 	//grid.printGrid();
 
 
