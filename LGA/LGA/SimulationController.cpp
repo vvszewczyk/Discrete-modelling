@@ -89,13 +89,15 @@ void SimulationController::display()
 
 	glBegin(GL_LINES);
 	// Linie pionowe
-	for (int x = 0; x <= width; ++x) {
+	for (int x = 0; x <= width; ++x) 
+	{
 		int xPos = x * controller->cellSize;
 		glVertex2i(xPos, 0);                // Dolny punkt
 		glVertex2i(xPos, height * controller->cellSize); // Górny punkt
 	}
 	// Linie poziome
-	for (int y = 0; y <= height; ++y) {
+	for (int y = 0; y <= height; ++y) 
+	{
 		int yPos = y * controller->cellSize;
 		glVertex2i(0, yPos);                // Lewy punkt
 		glVertex2i(width * controller->cellSize, yPos);  // Prawy punkt
@@ -127,9 +129,11 @@ void SimulationController::keyboard(unsigned char key, int x, int y)
 
 void SimulationController::updateSimulation()
 {
+	grid->collision();
+	grid->streaming();
+
 	//cudaHandler->executeCollisionKernel();
 	//cudaHandler->executeStreamingKernel();
-
 	//cudaHandler->copyGridToCPU(*grid);
 
 	glutPostRedisplay();
