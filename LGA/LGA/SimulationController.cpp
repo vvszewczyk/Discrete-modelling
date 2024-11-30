@@ -1,11 +1,14 @@
 #include "SimulationController.h"
+#include <iostream>
 
 // Static pointer for current controller (GLUT REQUIRES IT)
 static SimulationController* controller = nullptr;
 
-SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs) 
+SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1)
 {
 	controller = this;
+	buttonLabelSS = "Start";
+	buttonLabelWE = "Wall";
 };
 
 SimulationController::~SimulationController() {}
@@ -23,19 +26,20 @@ void SimulationController::stopSimulation()
 void SimulationController::toggleSimulation()
 {
 	isRunning = !isRunning;
-	buttonLabel = isRunning ? "Stop" : "Start";
+	buttonLabelSS = isRunning ? "Stop" : "Start";
 }
 
 void SimulationController::toggleWallPlacement()
 {
 	placingWalls = !placingWalls;
+	buttonLabelWE = placingWalls ? "Empty" : "Wall";
 }
 
 void SimulationController::resetSimulation()
 {
 	isRunning = false;
 	grid->initialize();
-	buttonLabel = "Start";
+	buttonLabelSS = "Start";
 	glutPostRedisplay();
 }
 
@@ -51,6 +55,7 @@ void SimulationController::initializeOpenGL(int argc, char** argv)
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutMouseFunc(mouseHandler);
+	glutMotionFunc(staticMotionHandler);
 	glutIdleFunc([]()
 		{
 			if (controller->isRunning)
@@ -62,7 +67,6 @@ void SimulationController::initializeOpenGL(int argc, char** argv)
 	glLoadIdentity();
 	gluOrtho2D(0, windowWidth, 0, windowHeight);
 }
-
 
 void SimulationController::display()
 {
@@ -145,9 +149,13 @@ void SimulationController::display()
 	glLoadIdentity();
 	gluOrtho2D(0, controller->windowWidth, 0, buttonViewportHeight);
 
-	controller->drawButton(5, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabel.c_str());
+	controller->drawButton(5, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelSS.c_str());
 	controller->drawButton(120, buttonViewportHeight / 2 - 15, 100, 30, "Reset");
-	controller->drawButton(240, buttonViewportHeight / 2 - 15, 100, 30, "Walls");
+	controller->drawButton(235, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelWE.c_str());
+	controller->drawButton(360, buttonViewportHeight / 2 - 15, 30, 30, "<");
+	controller->drawButton(400, buttonViewportHeight / 2 - 15, 60, 30, std::to_string(controller->stepsPerFrame).c_str());
+	controller->drawButton(470, buttonViewportHeight / 2 - 15, 30, 30, ">");
+
 
 
 	glutSwapBuffers();
@@ -199,55 +207,109 @@ void SimulationController::drawButton(float x, float y, float width, float heigh
 
 void SimulationController::mouseHandler(int button, int state, int x, int y)
 {
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	y = controller->windowHeight - y;
+
+	int buttonWidth = 100;
+	int buttonHeight = 30;
+	int buttonViewportHeight = controller->windowHeight / 20;
+	int buttonY = buttonViewportHeight / 2 - buttonHeight / 2;
+
+	if (button == GLUT_LEFT_BUTTON)
 	{
-		y = controller->windowHeight - y;
-		int buttonWidth = 100;
-		int buttonHeight = 30;
-		int buttonViewportHeight = controller->windowHeight / 20;
-		int buttonY = buttonViewportHeight / 2 - buttonHeight / 2;
-
-		// Start/stop button
-		if (x >= 5 && x <= 5 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
+		if (state == GLUT_DOWN)
 		{
-			controller->toggleSimulation();
-		}
+			controller->isLeftMouseDown = true;
 
-		// Reset button
-		if (x >= 120 && x <= 120 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
-		{
-			controller->resetSimulation();
-		}
-
-		// Wall placing button
-		if (x >= 240 && x <= 240 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
-		{
-			controller->toggleWallPlacement();
-		}
-
-		// Placing walls
-		if (controller->placingWalls)
-		{
-			int gridX = x / controller->cellSize;
-			int gridY = (y - buttonViewportHeight) / controller->cellSize;
-
-			if (gridX >= 0 && gridX < controller->grid->getWidth() && gridY >= 0 && gridY < controller->grid->getHeight())
+			// Start/stop button
+			if (x >= 5 && x <= 5 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
 			{
-				controller->grid->getCell(gridX, gridY).setWall(true);
-				glutPostRedisplay();
+				controller->toggleSimulation();
 			}
+
+			// Reset button
+			if (x >= 120 && x <= 120 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
+			{
+				controller->resetSimulation();
+			}
+
+			// Wall placing button
+			if (x >= 240 && x <= 240 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
+			{
+				controller->toggleWallPlacement();
+			}
+
+			// Zmniejszenie liczby kroków symulacji na klatkê
+			if (x >= 360 && x <= 390 && y >= buttonY && y <= buttonY + buttonHeight)
+			{
+				controller->stepsPerFrame = std::max(1, controller->stepsPerFrame - 1); // Minimalny krok = 1
+				std::cout << "Decreased simulation speed: " << controller->stepsPerFrame << " steps/frame" << std::endl;
+			}
+
+			// FPS Display (no action needed)
+
+			// Zwiêkszenie liczby kroków symulacji na klatkê
+			if (x >= 470 && x <= 500 && y >= buttonY && y <= buttonY + buttonHeight)
+			{
+				controller->stepsPerFrame = std::min(100, controller->stepsPerFrame + 1); // Maksymalny krok = 100
+				std::cout << "Increased simulation speed: " << controller->stepsPerFrame << " steps/frame" << std::endl;
+			}
+
+		}
+		else if (state == GLUT_UP)
+		{
+			controller->isLeftMouseDown = false;
 		}
 	}
 }
 
+void SimulationController::motionHandler(int x, int y)
+{
+	y = controller->windowHeight - y;
+	int buttonViewportHeight = controller->windowHeight / 20;
+
+	if (controller->isLeftMouseDown)
+	{
+		int gridX = x / controller->cellSize;
+		int gridY = (y - buttonViewportHeight) / controller->cellSize;
+
+		if (gridX >= 0 && gridX < controller->grid->getWidth() && gridY >= 0 && gridY < controller->grid->getHeight())
+		{
+			if (controller->placingWalls)
+			{
+				controller->grid->getCell(gridX, gridY).setWall(true);
+			}
+			else
+			{
+				controller->grid->getCell(gridX, gridY).setWall(false);
+				controller->grid->getCell(gridX, gridY).resetDirections();
+			}
+			glutPostRedisplay();
+		}
+	}
+}
+
+void SimulationController::staticMotionHandler(int x, int y)
+{
+	if (controller != nullptr)
+	{
+		controller->motionHandler(x, y);
+	}
+}
+
+
+
 void SimulationController::updateSimulation()
 {
-	grid->collision();
-	grid->streaming();
+	for (int i = 0; i < stepsPerFrame; ++i)
+	{
+		grid->collision();
+		grid->streaming();
 
-	//cudaHandler->executeCollisionKernel();
-	//cudaHandler->executeStreamingKernel();
-	//cudaHandler->copyGridToCPU(*grid);
+		// Mo¿esz odkomentowaæ poni¿sze linie, jeœli u¿ywasz CUDA:
+		// cudaHandler->executeCollisionKernel();
+		// cudaHandler->executeStreamingKernel();
+		// cudaHandler->copyGridToCPU(*grid);
+	}
 
 	glutPostRedisplay();
 }

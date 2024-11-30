@@ -17,7 +17,6 @@ int main(int argc, char** argv)
 	Grid grid(gridWidth, gridHeight);
 	grid.initialize();
 	grid.getCell(10, 15).setDirection(0, true);
-	//grid.printGrid();
 
 
 	// CUDA initializing

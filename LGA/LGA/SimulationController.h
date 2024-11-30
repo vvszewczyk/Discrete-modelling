@@ -16,8 +16,11 @@ private:
 	int windowHeight;
 	int cellSize; // Size of single cell in pixels
 
-	std::string buttonLabel = "Start";
+	std::string buttonLabelSS;
 	bool placingWalls = false;
+	bool isLeftMouseDown = false;
+	std::string buttonLabelWE; // Button wall/empty string
+	int stepsPerFrame;
 
 public:
 	SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs);
@@ -27,6 +30,7 @@ public:
 	void startSimulation();
 	void stopSimulation();
 	void toggleSimulation();
+	void toggleWallPlacement();
 	void resetSimulation();
 
 	void initializeOpenGL(int argc, char** argv);
@@ -36,7 +40,8 @@ public:
 	
 	void drawButton(float x, float y, float width, float height, const char* label);
 	static void mouseHandler(int button, int state, int x, int y);
-	void toggleWallPlacement();
+	void motionHandler(int x, int y);
+	static void staticMotionHandler(int x, int y);
 
 	void updateSimulation(); // Update simulation state
 };

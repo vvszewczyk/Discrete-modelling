@@ -2,6 +2,17 @@
 #include <string>
 #include <iostream>
 
+Grid::Grid(int w, int h) : width(w), height(h), grid(h, std::vector<Cell>(w)) {}
+
+int Grid::getWidth() const
+{
+    return this->width;
+}
+
+int Grid::getHeight() const
+{
+    return this->height;
+}
 
 void Grid::initialize(bool defaultWall)
 {

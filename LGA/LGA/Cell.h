@@ -10,21 +10,13 @@ private:
 	std::vector<bool> direction; // Directions: [N, E, S, W]
 
 public:
-	Cell(bool w = false) : isWall(w), direction(4, false) {};
+	Cell(bool w = "false");
 
 	void setDirection(int dir, bool value);
 	bool getDirection(int dir) const;
 
-	void setWall(bool value)
-	{
-		this->isWall = value;
-	}
-
-	bool getWall() const
-	{
-		return this->isWall;
-	}
-
+	void setWall(bool value);
+	bool getWall() const;
 	
 	void resetDirections();
 };

@@ -11,20 +11,12 @@ private:
 	int height;
 
 public:
-	Grid(int w, int h) : width(w), height(h), grid(h, std::vector<Cell>(w)){}
+	Grid(int w, int h);
 
-	int getWidth() const
-	{
-		return this->width;
-	}
-
-	int getHeight() const
-	{
-		return this->height;
-	}
+	int getWidth() const;
+	int getHeight() const;
 
 	void initialize(bool defaultWall = false);
-
 
 	Cell& getCell(int x, int y);
 	const Cell& getCell(int x, int y) const;
