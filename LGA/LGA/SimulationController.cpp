@@ -23,6 +23,20 @@ void SimulationController::stopSimulation()
 void SimulationController::toggleSimulation()
 {
 	isRunning = !isRunning;
+	buttonLabel = isRunning ? "Stop" : "Start";
+}
+
+void SimulationController::toggleWallPlacement()
+{
+	placingWalls = !placingWalls;
+}
+
+void SimulationController::resetSimulation()
+{
+	isRunning = false;
+	grid->initialize();
+	buttonLabel = "Start";
+	glutPostRedisplay();
 }
 
 void SimulationController::initializeOpenGL(int argc, char** argv)
@@ -36,6 +50,7 @@ void SimulationController::initializeOpenGL(int argc, char** argv)
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
+	glutMouseFunc(mouseHandler);
 	glutIdleFunc([]()
 		{
 			if (controller->isRunning)
@@ -52,6 +67,13 @@ void SimulationController::initializeOpenGL(int argc, char** argv)
 void SimulationController::display()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	int buttonViewportHeight = controller->windowHeight / 20;
+
+	glViewport(0, buttonViewportHeight, controller->windowWidth, controller->windowHeight - buttonViewportHeight);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, controller->grid->getWidth() * controller->cellSize, 0, controller->grid->getHeight() * controller->cellSize);
 
 	int width = controller->grid->getWidth();
 	int height = controller->grid->getHeight();
@@ -116,6 +138,18 @@ void SimulationController::display()
 		glVertex2i(width * controller->cellSize, yPos);
 	}
 	glEnd();
+
+	// User interface (buttons)
+	glViewport(0, 0, controller->windowWidth, buttonViewportHeight);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, controller->windowWidth, 0, buttonViewportHeight);
+
+	controller->drawButton(5, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabel.c_str());
+	controller->drawButton(120, buttonViewportHeight / 2 - 15, 100, 30, "Reset");
+	controller->drawButton(240, buttonViewportHeight / 2 - 15, 100, 30, "Walls");
+
+
 	glutSwapBuffers();
 }
 
@@ -137,6 +171,72 @@ void SimulationController::keyboard(unsigned char key, int x, int y)
 	else if (key == 27) // ESC
 	{
 		exit(0);
+	}
+}
+
+void SimulationController::drawButton(float x, float y, float width, float height, const char* label)
+{
+	glColor3f(0.8f, 0.8f, 0.8f);
+	glRectf(x, y, x + width, y + height);
+
+	// Center string
+	int textWidth = 0;
+	for (const char* c = label; *c != '\0'; c++)
+	{
+		textWidth += glutBitmapWidth(GLUT_BITMAP_HELVETICA_12, *c);
+	}
+
+	float textX = x + (width - textWidth) / 2;
+	float textY = y + (height - 12) / 2;
+
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glRasterPos2f(textX, textY);
+	for (const char* c = label; *c != '\0'; c++)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+	}
+}
+
+void SimulationController::mouseHandler(int button, int state, int x, int y)
+{
+	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+	{
+		y = controller->windowHeight - y;
+		int buttonWidth = 100;
+		int buttonHeight = 30;
+		int buttonViewportHeight = controller->windowHeight / 20;
+		int buttonY = buttonViewportHeight / 2 - buttonHeight / 2;
+
+		// Start/stop button
+		if (x >= 5 && x <= 5 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
+		{
+			controller->toggleSimulation();
+		}
+
+		// Reset button
+		if (x >= 120 && x <= 120 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
+		{
+			controller->resetSimulation();
+		}
+
+		// Wall placing button
+		if (x >= 240 && x <= 240 + buttonWidth && y >= buttonY && y <= buttonY + buttonHeight)
+		{
+			controller->toggleWallPlacement();
+		}
+
+		// Placing walls
+		if (controller->placingWalls)
+		{
+			int gridX = x / controller->cellSize;
+			int gridY = (y - buttonViewportHeight) / controller->cellSize;
+
+			if (gridX >= 0 && gridX < controller->grid->getWidth() && gridY >= 0 && gridY < controller->grid->getHeight())
+			{
+				controller->grid->getCell(gridX, gridY).setWall(true);
+				glutPostRedisplay();
+			}
+		}
 	}
 }
 

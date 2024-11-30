@@ -16,9 +16,10 @@ void Grid::initialize(bool defaultWall)
 				grid[y][x].setWall(true);
 			}
 
-            int wallColumn = width / 6; // Kolumna œciany
-            int gapStart = height / 3;  // Pocz¹tek otworu (np. 1/3 wysokoœci)
-            int gapEnd = 2 * height / 3; // Koniec otworu (np. 2/3 wysokoœci)
+            int wallColumn = width / 6;
+            int gapStart = height / 3;
+            int gapEnd = 2 * height / 3;
+
             if (x == wallColumn && (y < gapStart || y > gapEnd))
             {
                 grid[y][x].setWall(true);
@@ -87,7 +88,6 @@ void Grid::collision()
         }
     }
 }
-
 
 void Grid::streaming()
 {
@@ -172,4 +172,15 @@ void Grid::streaming()
     }
 
     grid = newGrid;
+}
+
+void Grid::resetGrid()
+{
+    for (std::size_t y = 0; y < height; ++y)
+    {
+        for (std::size_t x = 0; x < width; ++x)
+        {
+            grid[y][x].resetDirections();
+        }
+    }
 }
