@@ -3,6 +3,8 @@
 #include "Grid.h"
 #include "CudaHandler.h"
 #include <GL/freeglut.h>
+#include <string>
+
 
 class SimulationController
 {
@@ -16,11 +18,15 @@ private:
 	int windowHeight;
 	int cellSize; // Size of single cell in pixels
 
-	std::string buttonLabelSS;
+	std::string buttonLabelSS; // Button label for stop/start
 	bool placingWalls = false;
 	bool isLeftMouseDown = false;
-	std::string buttonLabelWE; // Button wall/empty string
-	int stepsPerFrame;
+	std::string buttonLabelWE; // Button label for wall/empty
+	int stepsPerFrame; // For managing simulation speed
+
+	bool gridModified;
+	static const int MIN_STEPS_PER_FRAME = 1;
+	static const int MAX_STEPS_PER_FRAME = 20;
 
 public:
 	SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs);
@@ -33,7 +39,7 @@ public:
 	void toggleWallPlacement();
 	void resetSimulation();
 
-	void initializeOpenGL(int argc, char** argv);
+	void initializeUI(int argc, char** argv);
 	static void display(); // Function for OpenGL for drawing
 	static void reshape(int w, int h); // Change size of window
 	static void keyboard(unsigned char key, int x, int y); // Keyboard operation

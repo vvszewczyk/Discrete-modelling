@@ -1,10 +1,12 @@
 #include "SimulationController.h"
 #include <iostream>
+#include <string>
+
 
 // Static pointer for current controller (GLUT REQUIRES IT)
 static SimulationController* controller = nullptr;
 
-SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1)
+SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false)
 {
 	controller = this;
 	buttonLabelSS = "Start";
@@ -27,6 +29,11 @@ void SimulationController::toggleSimulation()
 {
 	isRunning = !isRunning;
 	buttonLabelSS = isRunning ? "Stop" : "Start";
+	
+	if (isRunning)
+	{
+		gridModified = true;
+	}
 }
 
 void SimulationController::toggleWallPlacement()
@@ -40,10 +47,13 @@ void SimulationController::resetSimulation()
 	isRunning = false;
 	grid->initialize();
 	buttonLabelSS = "Start";
+
+	cudaHandler->initializeDeviceGrids(grid->getGridData());
+
 	glutPostRedisplay();
 }
 
-void SimulationController::initializeOpenGL(int argc, char** argv)
+void SimulationController::initializeUI(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
@@ -82,15 +92,15 @@ void SimulationController::display()
 	int width = controller->grid->getWidth();
 	int height = controller->grid->getHeight();
 
-	for (std::size_t y = 0; y < height; ++y)
+	for (int y = 0; y < height; ++y)
 	{
-		for (std::size_t x = 0; x < width; ++x)
+		for (int x = 0; x < width; ++x)
 		{
 			const Cell& cell = controller->grid->getCell(x, y);
 
 			if (cell.getWall()) // Wall
 			{
-				glColor3f(0.2f, 0.2f, 0.2f);
+				glColor3f(1.0f, 1.0f, 1.0f);
 			}
 			else if (cell.getDirection(0)) // North
 			{
@@ -110,7 +120,7 @@ void SimulationController::display()
 			}
 			else
 			{
-				glColor3f(0.8f, 0.8f, 0.8f); // Empty
+				glColor3f(0.0f, 0.0f, 0.0f); // Empty
 			}
 
 			glRecti(
@@ -125,24 +135,6 @@ void SimulationController::display()
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glLineWidth(1.0f);
 
-	glBegin(GL_LINES);
-	// Vertical lines
-	for (std::size_t x = 0; x <= width; ++x) 
-	{
-		int xPos = x * controller->cellSize;
-		glVertex2i(xPos, 0);
-		glVertex2i(xPos, height * controller->cellSize);
-	}
-
-	// Horizontal lines
-	for (std::size_t y = 0; y <= height; ++y)
-	{
-		int yPos = y * controller->cellSize;
-		glVertex2i(0, yPos);
-		glVertex2i(width * controller->cellSize, yPos);
-	}
-	glEnd();
-
 	// User interface (buttons)
 	glViewport(0, 0, controller->windowWidth, buttonViewportHeight);
 	glMatrixMode(GL_PROJECTION);
@@ -155,8 +147,6 @@ void SimulationController::display()
 	controller->drawButton(360, buttonViewportHeight / 2 - 15, 30, 30, "<");
 	controller->drawButton(400, buttonViewportHeight / 2 - 15, 60, 30, std::to_string(controller->stepsPerFrame).c_str());
 	controller->drawButton(470, buttonViewportHeight / 2 - 15, 30, 30, ">");
-
-
 
 	glutSwapBuffers();
 }
@@ -238,19 +228,17 @@ void SimulationController::mouseHandler(int button, int state, int x, int y)
 				controller->toggleWallPlacement();
 			}
 
-			// Zmniejszenie liczby kroków symulacji na klatkê
+			// Slow down
 			if (x >= 360 && x <= 390 && y >= buttonY && y <= buttonY + buttonHeight)
 			{
-				controller->stepsPerFrame = std::max(1, controller->stepsPerFrame - 1); // Minimalny krok = 1
+				controller->stepsPerFrame =std::max(MIN_STEPS_PER_FRAME, controller->stepsPerFrame - 1);
 				std::cout << "Decreased simulation speed: " << controller->stepsPerFrame << " steps/frame" << std::endl;
 			}
 
-			// FPS Display (no action needed)
-
-			// Zwiêkszenie liczby kroków symulacji na klatkê
+			// Speed up
 			if (x >= 470 && x <= 500 && y >= buttonY && y <= buttonY + buttonHeight)
 			{
-				controller->stepsPerFrame = std::min(100, controller->stepsPerFrame + 1); // Maksymalny krok = 100
+				controller->stepsPerFrame = std::min(MAX_STEPS_PER_FRAME, controller->stepsPerFrame + 1);
 				std::cout << "Increased simulation speed: " << controller->stepsPerFrame << " steps/frame" << std::endl;
 			}
 
@@ -283,6 +271,8 @@ void SimulationController::motionHandler(int x, int y)
 				controller->grid->getCell(gridX, gridY).setWall(false);
 				controller->grid->getCell(gridX, gridY).resetDirections();
 			}
+
+			controller->gridModified = true;
 			glutPostRedisplay();
 		}
 	}
@@ -297,21 +287,21 @@ void SimulationController::staticMotionHandler(int x, int y)
 }
 
 
-
 void SimulationController::updateSimulation()
 {
+	if (gridModified)
+	{
+		cudaHandler->copyGridToGPU(grid->getGridData());
+		gridModified = false;
+	}
+
 	for (int i = 0; i < stepsPerFrame; ++i)
 	{
-		grid->collision();
-		grid->streaming();
-
-		// Mo¿esz odkomentowaæ poni¿sze linie, jeœli u¿ywasz CUDA:
-		// cudaHandler->executeCollisionKernel();
-		// cudaHandler->executeStreamingKernel();
-		// cudaHandler->copyGridToCPU(*grid);
+		cudaHandler->executeCollisionKernel();
+		cudaHandler->executeStreamingKernel();
 	}
+
+	cudaHandler->copyGridToCPU(grid->getGridData());
 
 	glutPostRedisplay();
 }
-
-

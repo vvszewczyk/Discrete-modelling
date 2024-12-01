@@ -5,8 +5,8 @@
 int main(int argc, char** argv)
 {
 	// Grid size
-	const int gridWidth = 100;
-	const int gridHeight = 100;
+	const int gridWidth = 800;
+	const int gridHeight = 800;
 
 	// Window size
 	const int windowWidht = 800;
@@ -16,16 +16,14 @@ int main(int argc, char** argv)
 	// Grid initializing
 	Grid grid(gridWidth, gridHeight);
 	grid.initialize();
-	grid.getCell(10, 15).setDirection(0, true);
-
 
 	// CUDA initializing
 	CudaHandler cudaHandler(gridWidth, gridHeight);
-	//cudaHandler.allocateMemory();
-	//cudaHandler.copyGridToGPU(grid);
+	cudaHandler.initializeDeviceGrids(grid.getGridData());
 
+	// SimulationController initializing
 	SimulationController controller(&grid, &cudaHandler, windowWidht, windowHeight, cellSize);
-	controller.initializeOpenGL(argc, argv);
+	controller.initializeUI(argc, argv);
 
 	glutMainLoop();
 }

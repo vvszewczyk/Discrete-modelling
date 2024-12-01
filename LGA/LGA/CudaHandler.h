@@ -13,23 +13,22 @@ private:
 	int gridHeight;
 
 public:
-	CudaHandler(int width, int height) : gridWidth(width), gridHeight(height), gridInput(nullptr), gridOutput(nullptr) {};
-	~CudaHandler()
-	{
-		//freeMemory();
-	}
+	CudaHandler(int width, int height);
+	~CudaHandler();
 
 	// Initialization memory for GPU
-	//void allocateMemory();
+	void allocateMemory();
 
 	// Data transfer GPU <-> CPU
-	//void copyGridToGPU(const std::vector<std::vector<Cell>>& grid);
-	//void copyGridToCPU(std::vector<std::vector<Cell>>& grid);
+	void copyGridToGPU(const Cell* h_grid);
+	void copyGridToCPU(Cell* h_grid);
 
 	// Trigger kernels
-	//void executeCollisionKernel();
-	//void executeStreamingKernel();
+	void executeCollisionKernel();
+	void executeStreamingKernel();
 
 	// Free GPU memory
-	//void freeMemory();
+	void freeMemory();
+
+	void initializeDeviceGrids(const Cell* h_grid);
 };
