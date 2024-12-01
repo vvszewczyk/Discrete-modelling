@@ -25,8 +25,8 @@ private:
 	int stepsPerFrame; // For managing simulation speed
 
 	bool gridModified;
-	static const int MIN_STEPS_PER_FRAME = 1;
-	static const int MAX_STEPS_PER_FRAME = 20;
+	static const int minStepsPerFrame = 1;
+	static const int maxStepsPerFrame = 20;
 
 public:
 	SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs);
@@ -39,15 +39,15 @@ public:
 	void toggleWallPlacement();
 	void resetSimulation();
 
-	void initializeUI(int argc, char** argv);
+	void initializeUI(int argc, char** argv); // Initialise UI, set OpenGL and GLUT
 	static void display(); // Function for OpenGL for drawing
 	static void reshape(int w, int h); // Change size of window
-	static void keyboard(unsigned char key, int x, int y); // Keyboard operation
-	
+	static void keyboard(unsigned char key, int x, int y); // Keyboard input operation
+
 	void drawButton(float x, float y, float width, float height, const char* label);
-	static void mouseHandler(int button, int state, int x, int y);
-	void motionHandler(int x, int y);
-	static void staticMotionHandler(int x, int y);
+	static void mouseHandler(int button, int state, int x, int y); // Button managment
+	void motionHandler(int x, int y); // Mouse managment in case when LMB pressed
+	static void staticMotionHandler(int x, int y); // Motion handler but static
 
 	void updateSimulation(); // Update simulation state
 };

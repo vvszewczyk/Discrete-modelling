@@ -12,6 +12,16 @@ Grid::~Grid()
     delete[] grid;
 }
 
+Cell* Grid::getGridData()
+{
+    return grid;
+}
+
+const Cell* Grid::getGridData() const
+{
+    return grid;
+}
+
 int Grid::getWidth() const
 {
     return this->width;
@@ -40,16 +50,16 @@ void Grid::setCell(int x, int y, const Cell& cell)
 void Grid::initialize(bool defaultWall)
 {
     resetGrid();
-	for (int y = 0; y < height; ++y)
-	{
-		for (int x = 0; x < width; ++x)
-		{
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
             Cell& cell = getCell(x, y);
 
-			if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
-			{
-				cell.setWall(true);
-			}
+            if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
+            {
+                cell.setWall(true);
+            }
 
             int wallColumn = width / 6;
             int gapStart = height / 3;
@@ -60,16 +70,25 @@ void Grid::initialize(bool defaultWall)
                 cell.setWall(true);
             }
 
-			if (!cell.getWall() && x < width / 6)
-			{
-				for (int dir = 0; dir < 4; ++dir) 
-				{
+            if (!cell.getWall() && x < width / 6)
+            {
+                for (int dir = 0; dir < 4; ++dir)
+                {
                     cell.setDirection(dir, rand() % 2);
 
-				}
-			}
-		}
-	}
+                }
+            }
+        }
+    }
+}
+
+void Grid::resetGrid()
+{
+    for (int i = 0; i < width * height; ++i)
+    {
+        grid[i].resetDirections();
+        grid[i].setWall(false);
+    }
 }
 
 //void Grid::collision()
@@ -194,12 +213,3 @@ void Grid::initialize(bool defaultWall)
 //
 //    grid = newGrid;
 //}
-
-void Grid::resetGrid()
-{
-    for (int i = 0; i < width * height; ++i)
-    {
-        grid[i].resetDirections();
-        grid[i].setWall(false);
-    }
-}

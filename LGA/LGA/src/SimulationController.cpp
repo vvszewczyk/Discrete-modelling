@@ -29,7 +29,7 @@ void SimulationController::toggleSimulation()
 {
 	isRunning = !isRunning;
 	buttonLabelSS = isRunning ? "Stop" : "Start";
-	
+
 	if (isRunning)
 	{
 		gridModified = true;
@@ -55,7 +55,7 @@ void SimulationController::resetSimulation()
 
 void SimulationController::initializeUI(int argc, char** argv)
 {
-	glutInit(&argc, argv);
+	glutInit(&argc, argv); // Initialise GLUT library
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutCreateWindow("LGA");
@@ -66,7 +66,7 @@ void SimulationController::initializeUI(int argc, char** argv)
 	glutKeyboardFunc(keyboard);
 	glutMouseFunc(mouseHandler);
 	glutMotionFunc(staticMotionHandler);
-	glutIdleFunc([]()
+	glutIdleFunc([]() // Registers a function that is called when the application is "idle".
 		{
 			if (controller->isRunning)
 			{
@@ -80,18 +80,20 @@ void SimulationController::initializeUI(int argc, char** argv)
 
 void SimulationController::display()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT); // Clear last frame
 
-	int buttonViewportHeight = controller->windowHeight / 20;
+	int buttonViewportHeight = controller->windowHeight / 20; // Space for buttons
 
 	glViewport(0, buttonViewportHeight, controller->windowWidth, controller->windowHeight - buttonViewportHeight);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, controller->grid->getWidth() * controller->cellSize, 0, controller->grid->getHeight() * controller->cellSize);
 
+	// Size of gird
 	int width = controller->grid->getWidth();
 	int height = controller->grid->getHeight();
 
+	// Set color of cell based on the state
 	for (int y = 0; y < height; ++y)
 	{
 		for (int x = 0; x < width; ++x)
@@ -124,16 +126,13 @@ void SimulationController::display()
 			}
 
 			glRecti(
-				x * controller->cellSize, 
+				x * controller->cellSize,
 				y * controller->cellSize,
-				(x + 1) * controller->cellSize, 
+				(x + 1) * controller->cellSize,
 				(y + 1) * controller->cellSize
 			);
 		}
 	}
-	// Drawing grid
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glLineWidth(1.0f);
 
 	// User interface (buttons)
 	glViewport(0, 0, controller->windowWidth, buttonViewportHeight);
@@ -141,6 +140,7 @@ void SimulationController::display()
 	glLoadIdentity();
 	gluOrtho2D(0, controller->windowWidth, 0, buttonViewportHeight);
 
+	// Buttons placement
 	controller->drawButton(5, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelSS.c_str());
 	controller->drawButton(120, buttonViewportHeight / 2 - 15, 100, 30, "Reset");
 	controller->drawButton(235, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelWE.c_str());
@@ -148,7 +148,7 @@ void SimulationController::display()
 	controller->drawButton(400, buttonViewportHeight / 2 - 15, 60, 30, std::to_string(controller->stepsPerFrame).c_str());
 	controller->drawButton(470, buttonViewportHeight / 2 - 15, 30, 30, ">");
 
-	glutSwapBuffers();
+	glutSwapBuffers(); // Double buffer for smooth rendering
 }
 
 void SimulationController::reshape(int w, int h)
@@ -174,31 +174,34 @@ void SimulationController::keyboard(unsigned char key, int x, int y)
 
 void SimulationController::drawButton(float x, float y, float width, float height, const char* label)
 {
-	glColor3f(0.8f, 0.8f, 0.8f);
-	glRectf(x, y, x + width, y + height);
+	glColor3f(0.8f, 0.8f, 0.8f); // Button color
+	glRectf(x, y, x + width, y + height); // Draw rectangle
 
-	// Center string
+
 	int textWidth = 0;
+
 	for (const char* c = label; *c != '\0'; c++)
 	{
-		textWidth += glutBitmapWidth(GLUT_BITMAP_HELVETICA_12, *c);
+		textWidth += glutBitmapWidth(GLUT_BITMAP_HELVETICA_12, *c); // glutBitmapWidth - returns the width of a single char in the selected font
 	}
-
+	// Center string coordinates
 	float textX = x + (width - textWidth) / 2;
 	float textY = y + (height - 12) / 2;
 
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glRasterPos2f(textX, textY);
+	glColor3f(0.0f, 0.0f, 0.0f); // Font color
+	glRasterPos2f(textX, textY); // Set start position of drawing text
+
 	for (const char* c = label; *c != '\0'; c++)
 	{
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c); // Draw a single char in the current position of drawing coursor (glRasterPos2f)
 	}
 }
 
 void SimulationController::mouseHandler(int button, int state, int x, int y)
 {
-	y = controller->windowHeight - y;
+	y = controller->windowHeight - y; // Converting position (correct with OpenGL)
 
+	// Button size
 	int buttonWidth = 100;
 	int buttonHeight = 30;
 	int buttonViewportHeight = controller->windowHeight / 20;
@@ -231,14 +234,14 @@ void SimulationController::mouseHandler(int button, int state, int x, int y)
 			// Slow down
 			if (x >= 360 && x <= 390 && y >= buttonY && y <= buttonY + buttonHeight)
 			{
-				controller->stepsPerFrame =std::max(MIN_STEPS_PER_FRAME, controller->stepsPerFrame - 1);
+				controller->stepsPerFrame = std::max(minStepsPerFrame, controller->stepsPerFrame - 1);
 				std::cout << "Decreased simulation speed: " << controller->stepsPerFrame << " steps/frame" << std::endl;
 			}
 
 			// Speed up
 			if (x >= 470 && x <= 500 && y >= buttonY && y <= buttonY + buttonHeight)
 			{
-				controller->stepsPerFrame = std::min(MAX_STEPS_PER_FRAME, controller->stepsPerFrame + 1);
+				controller->stepsPerFrame = std::min(maxStepsPerFrame, controller->stepsPerFrame + 1);
 				std::cout << "Increased simulation speed: " << controller->stepsPerFrame << " steps/frame" << std::endl;
 			}
 
@@ -252,8 +255,8 @@ void SimulationController::mouseHandler(int button, int state, int x, int y)
 
 void SimulationController::motionHandler(int x, int y)
 {
-	y = controller->windowHeight - y;
-	int buttonViewportHeight = controller->windowHeight / 20;
+	y = controller->windowHeight - y; // Converting position (correct with OpenGL)
+	int buttonViewportHeight = controller->windowHeight / 20; // Part of window for buttons
 
 	if (controller->isLeftMouseDown)
 	{
@@ -297,11 +300,12 @@ void SimulationController::updateSimulation()
 
 	for (int i = 0; i < stepsPerFrame; ++i)
 	{
+		// No need to copy grid to GPU, kernels work directly on iy
 		cudaHandler->executeCollisionKernel();
 		cudaHandler->executeStreamingKernel();
 	}
 
 	cudaHandler->copyGridToCPU(grid->getGridData());
 
-	glutPostRedisplay();
+	glutPostRedisplay(); // Marks the current window as needing to be redisplayed
 }

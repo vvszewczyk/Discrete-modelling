@@ -9,8 +9,7 @@ private:
     bool direction[4]; // Directions: [N, E, S, W]
 
 public:
-    __host__ __device__ Cell(bool w = false)
-        : isWall(w)
+    __host__ __device__ Cell(bool w = false) : isWall(w)
     {
         for (int i = 0; i < 4; ++i)
             direction[i] = false;
