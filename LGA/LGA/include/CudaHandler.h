@@ -16,19 +16,17 @@ public:
 	CudaHandler(int width, int height);
 	~CudaHandler();
 
-	// Initialization memory for GPU
-	void allocateMemory();
+	void allocateMemory(); // Initialization memory for GPU
 
 	// Data transfer GPU <-> CPU
-	void copyGridToGPU(const Cell* h_grid);
-	void copyGridToCPU(Cell* h_grid);
+	void copyGridToGPU(const Cell* grid);
+	void copyGridToCPU(Cell* rid);
 
 	// Trigger kernels
 	void executeCollisionKernel();
 	void executeStreamingKernel();
 
-	// Free GPU memory
-	void freeMemory();
+	void freeMemory(); // Free GPU memory
 
-	void initializeDeviceGrids(const Cell* h_grid);
+	void initializeDeviceGrids(const Cell* grid); // Copy both input and output grids on GPU
 };

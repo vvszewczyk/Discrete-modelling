@@ -15,21 +15,21 @@ CudaHandler::~CudaHandler()
 
 void CudaHandler::allocateMemory()
 {
-	size_t size = gridWidth * gridHeight * sizeof(Cell);
+	size_t size = gridWidth * gridHeight * sizeof(Cell); // Compute size of memory required to allocate grid
 	cudaMalloc((void**)&gridInput, size);
 	cudaMalloc((void**)&gridOutput, size);
 }
 
-void CudaHandler::copyGridToGPU(const Cell* h_grid)
+void CudaHandler::copyGridToGPU(const Cell* grid)
 {
 	size_t size = gridWidth * gridHeight * sizeof(Cell);
-	cudaMemcpy(gridInput, h_grid, size, cudaMemcpyHostToDevice);
+	cudaMemcpy(gridInput, grid, size, cudaMemcpyHostToDevice);
 }
 
-void CudaHandler::copyGridToCPU(Cell* h_grid)
+void CudaHandler::copyGridToCPU(Cell* grid)
 {
 	size_t size = gridWidth * gridHeight * sizeof(Cell);
-	cudaMemcpy(h_grid, gridInput, size, cudaMemcpyDeviceToHost);
+	cudaMemcpy(grid, gridInput, size, cudaMemcpyDeviceToHost);
 }
 
 void CudaHandler::freeMemory()
@@ -54,7 +54,6 @@ void CudaHandler::executeStreamingKernel()
 {
 	streamingKernelWrapper(gridInput, gridOutput, gridWidth, gridHeight);
 
-	// Swap the grids
 	Cell* temp = gridInput;
 	gridInput = gridOutput;
 	gridOutput = temp;

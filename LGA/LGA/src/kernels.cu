@@ -2,9 +2,13 @@
 #include "device_launch_parameters.h"
 #include "Cell.h"
 
+// Documentation: CUDA Programming Guide
+// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
+
 __global__ void collisionKernel(Cell* grid, int width, int height)
 {
     // x and y indices for the current thread
+    // blockIdx and threadIdx determine which thread in a given block deals with a given cell
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -17,7 +21,9 @@ __global__ void collisionKernel(Cell* grid, int width, int height)
     Cell& cell = grid[idx];
 
     if (cell.getWall())
+    {
         return;
+    }
 
     bool north = cell.getDirection(0);
     bool east = cell.getDirection(1);
@@ -65,9 +71,10 @@ __global__ void streamingKernel(Cell* gridInput, Cell* gridOutput, int width, in
     newCell.setWall(false);
     newCell.resetDirections();
 
-    // For each direction, check incoming particles and handle reflections
+    // Check incoming particles and handle reflections
     for (int d = 0; d < 4; ++d)
     {
+        // Coordinates of neighbour cell
         int nx = x;
         int ny = y;
 
@@ -119,7 +126,7 @@ __global__ void streamingKernel(Cell* gridInput, Cell* gridOutput, int width, in
         }
         else
         {
-            // Neighbor is out of bounds (boundary); treat as wall
+            // Neighbor is out of bounds; treat as wall
             if (cell.getDirection(oppositeDir))
             {
                 newCell.setDirection(d, true); // Reflect particle
@@ -141,23 +148,20 @@ __global__ void streamingKernel(Cell* gridInput, Cell* gridOutput, int width, in
     gridOutput[idx] = newCell;
 }
 
-
-
-// Wrapper functions to call from host code
 void collisionKernelWrapper(Cell* grid, int width, int height)
 {
-    dim3 blockSize(16, 16);
-    dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y);
+    dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
+    dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
-    collisionKernel <<<gridSize, blockSize >>> (grid, width, height);
-    cudaDeviceSynchronize();
+    collisionKernel <<<gridSize, blockSize >>> (grid, width, height); // Start kernel
+    cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }
 
 void streamingKernelWrapper(Cell* gridInput, Cell* gridOutput, int width, int height)
 {
-    dim3 blockSize(16, 16);
-    dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y);
+    dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
+    dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
-    streamingKernel <<<gridSize, blockSize >>> (gridInput, gridOutput, width, height);
-    cudaDeviceSynchronize();
+    streamingKernel <<<gridSize, blockSize >>> (gridInput, gridOutput, width, height); // Start kernel
+    cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }

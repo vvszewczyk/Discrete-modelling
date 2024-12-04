@@ -1,12 +1,20 @@
 #include "Grid.h"
 #include "CudaHandler.h"
 #include "SimulationController.h"
+#include <iostream>
 
 int main(int argc, char** argv)
 {
 	// Grid size
 	const int gridWidth = 800;
 	const int gridHeight = 800;
+
+	cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, 0); // 0 is the device ID
+	std::cout << "Max threads per block: " << prop.maxThreadsPerBlock << std::endl;
+	std::cout << "Max threads per dimension: " << prop.maxThreadsDim[0] << ", " << prop.maxThreadsDim[1] << std::endl;
+	std::cout << "Shared memory per block: " << prop.sharedMemPerBlock << " bytes" << std::endl;
+
 
 	// Window size
 	const int windowWidht = 800;
