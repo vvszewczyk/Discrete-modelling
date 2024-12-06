@@ -23,8 +23,8 @@ public:
 	void copyGridToCPU(Cell* rid);
 
 	// Trigger kernels
-	void executeCollisionKernel();
-	void executeStreamingKernel();
+	void executeCollision();
+	void executeStreaming();
 
 	void freeMemory(); // Free GPU memory
 

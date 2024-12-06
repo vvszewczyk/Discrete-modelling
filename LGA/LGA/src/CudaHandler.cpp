@@ -38,21 +38,21 @@ void CudaHandler::freeMemory()
 	cudaFree(gridOutput);
 }
 
-void CudaHandler::executeCollisionKernel()
+void CudaHandler::executeCollision()
 {
-	collisionKernelWrapper(gridInput, gridWidth, gridHeight);
+	collisionWrapper(gridInput, gridWidth, gridHeight);
 
 	cudaError_t err = cudaGetLastError();
 
 	if (err != cudaSuccess)
 	{
-		std::cerr << "CUDA Error in executeCollisionKernel: " << cudaGetErrorString(err) << std::endl;
+		std::cerr << "CUDA Error in executeCollision: " << cudaGetErrorString(err) << std::endl;
 	}
 }
 
-void CudaHandler::executeStreamingKernel()
+void CudaHandler::executeStreaming()
 {
-	streamingKernelWrapper(gridInput, gridOutput, gridWidth, gridHeight);
+	streamingWrapper(gridInput, gridOutput, gridWidth, gridHeight);
 
 	Cell* temp = gridInput;
 	gridInput = gridOutput;

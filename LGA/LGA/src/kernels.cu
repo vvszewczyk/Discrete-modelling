@@ -5,7 +5,7 @@
 // Documentation: CUDA Programming Guide
 // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
 
-__global__ void collisionKernel(Cell* grid, int width, int height)
+__global__ void collision(Cell* grid, int width, int height)
 {
     // x and y indices for the current thread
     // blockIdx and threadIdx determine which thread in a given block deals with a given cell
@@ -47,7 +47,7 @@ __global__ void collisionKernel(Cell* grid, int width, int height)
     }
 }
 
-__global__ void streamingKernel(Cell* gridInput, Cell* gridOutput, int width, int height)
+__global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int height)
 {
     // x and y indices for the current thread
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -148,20 +148,20 @@ __global__ void streamingKernel(Cell* gridInput, Cell* gridOutput, int width, in
     gridOutput[idx] = newCell;
 }
 
-void collisionKernelWrapper(Cell* grid, int width, int height)
+void collisionWrapper(Cell* grid, int width, int height)
 {
     dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
-    collisionKernel <<<gridSize, blockSize >>> (grid, width, height); // Start kernel
+    collision <<<gridSize, blockSize >>> (grid, width, height); // Start kernel
     cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }
 
-void streamingKernelWrapper(Cell* gridInput, Cell* gridOutput, int width, int height)
+void streamingWrapper(Cell* gridInput, Cell* gridOutput, int width, int height)
 {
     dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
-    streamingKernel <<<gridSize, blockSize >>> (gridInput, gridOutput, width, height); // Start kernel
+    streaming <<<gridSize, blockSize >>> (gridInput, gridOutput, width, height); // Start kernel
     cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }

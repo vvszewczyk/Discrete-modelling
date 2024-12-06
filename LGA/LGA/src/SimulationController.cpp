@@ -301,8 +301,8 @@ void SimulationController::updateSimulation()
 	for (int i = 0; i < stepsPerFrame; ++i)
 	{
 		// No need to copy grid to GPU, kernels work directly on iy
-		cudaHandler->executeCollisionKernel();
-		cudaHandler->executeStreamingKernel();
+		cudaHandler->executeCollision();
+		cudaHandler->executeStreaming();
 	}
 
 	cudaHandler->copyGridToCPU(grid->getGridData());
