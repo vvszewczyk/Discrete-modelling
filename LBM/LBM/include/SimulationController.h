@@ -28,6 +28,8 @@ private:
 	static const int minStepsPerFrame = 1;
 	static const int maxStepsPerFrame = 20;
 
+	double tau;
+
 public:
 	SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs);
 	~SimulationController();

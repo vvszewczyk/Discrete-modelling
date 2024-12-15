@@ -6,7 +6,7 @@
 // Static pointer for current controller (GLUT REQUIRES IT)
 static SimulationController* controller = nullptr;
 
-SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false)
+SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false), tau(1.0)
 {
 	controller = this;
 	buttonLabelSS = "Start";
@@ -102,13 +102,13 @@ void SimulationController::display()
 
 			if (cell.getWall()) // Wall
 			{
-				glColor3f(1.0f, 1.0f, 1.0f);
+				glColor3f(0.0f, 1.0f, 0.0f);
 			}
 			else
 			{
 				double C = cell.getC();
-				// Za³ó¿my, ¿e C jest miêdzy 0 a 1.
-				// Mapuj C na szaroœæ: 0 - czarny, 1 - bia³y
+				// Thesis: C is between 0 and 1
+				// Mapping C: 0 - black, 1 - white
 				if (C < 0.0) C = 0.0;
 				if (C > 1.0) C = 1.0;
 				glColor3f(C, C, C);
@@ -133,9 +133,12 @@ void SimulationController::display()
 	controller->drawButton(5, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelSS.c_str());
 	controller->drawButton(120, buttonViewportHeight / 2 - 15, 100, 30, "Reset");
 	controller->drawButton(235, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelWE.c_str());
-	controller->drawButton(360, buttonViewportHeight / 2 - 15, 30, 30, "<");
+	controller->drawButton(360, buttonViewportHeight / 2 - 15, 30, 30, "-");
 	controller->drawButton(400, buttonViewportHeight / 2 - 15, 60, 30, std::to_string(controller->stepsPerFrame).c_str());
-	controller->drawButton(470, buttonViewportHeight / 2 - 15, 30, 30, ">");
+	controller->drawButton(470, buttonViewportHeight / 2 - 15, 30, 30, "+");
+	controller->drawButton(530, buttonViewportHeight / 2 - 15, 30, 30, "-");
+	controller->drawButton(570, buttonViewportHeight / 2 - 15, 60, 30, std::to_string(controller->tau).c_str());
+	controller->drawButton(640, buttonViewportHeight / 2 - 15, 30, 30, "+");
 
 	glutSwapBuffers(); // Double buffer for smooth rendering
 }
@@ -234,6 +237,21 @@ void SimulationController::mouseHandler(int button, int state, int x, int y)
 				std::cout << "Increased simulation speed: " << controller->stepsPerFrame << " steps/frame" << std::endl;
 			}
 
+			// Decrease tau
+			if (x >= 530 && x <= 530 + 30 && y >= buttonY && y <= buttonY + buttonHeight)
+			{
+				
+				controller->tau = std::max(1.0, controller->tau - 0.1);
+				std::cout << "Decreased tau: " << controller->tau << std::endl;
+			}
+
+			// Increase tau
+			if (x >= 640 && x <= 640 + 30 && y >= buttonY && y <= buttonY + buttonHeight)
+			{
+				controller->tau += 0.1;
+				std::cout << "Increased tau: " << controller->tau << std::endl;
+			}
+
 		}
 		else if (state == GLUT_UP)
 		{
@@ -289,7 +307,7 @@ void SimulationController::updateSimulation()
 	for (int i = 0; i < stepsPerFrame; ++i)
 	{
 		// No need to copy grid to GPU, kernels work directly on iy
-		cudaHandler->executeCollision();
+		cudaHandler->executeCollision(tau);
 		cudaHandler->executeStreaming();
 	}
 

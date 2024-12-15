@@ -49,10 +49,10 @@ void Grid::setCell(int x, int y, const Cell& cell)
 
 void Grid::initialize(bool defaultWall)
 {
-    //resetGrid();
+    resetGrid(); // Clear new walls
 
-    double w0 = 2.0 / 6.0;
-    double w1 = 1.0 / 6.0; // for N,E,S,W
+    // D2Q4 weights
+    double w = 1.0 / 4.0;
 
     for (int y = 0; y < height; ++y)
     {
@@ -62,11 +62,12 @@ void Grid::initialize(bool defaultWall)
             double CInit = (x < width / 6) ? 1.0 : 0.0;
             cell.setC(CInit);
 
-            cell.setF_in(0, w0 * CInit); // 0
-            cell.setF_in(1, w1 * CInit); // N
-            cell.setF_in(2, w1 * CInit); // E
-            cell.setF_in(3, w1 * CInit); // S
-            cell.setF_in(4, w1 * CInit); // W
+            for (int i = 0; i < 4; i++)
+            {
+                cell.setF_in(i, w * CInit);
+                cell.setF_eq(i, w * CInit);
+                cell.setF_out(i, w * CInit);
+            }
 
             if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
             {

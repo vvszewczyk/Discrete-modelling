@@ -5,9 +5,7 @@
 // Documentation: CUDA Programming Guide
 // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
 
-__constant__ double tau = 1.0;
-
-__global__ void collision(Cell* grid, int width, int height)
+__global__ void collision(Cell* grid, int width, int height, double tau)
 {
     // x and y indices for the current thread
     // blockIdx and threadIdx determine which thread in a given block deals with a given cell
@@ -28,26 +26,26 @@ __global__ void collision(Cell* grid, int width, int height)
     }
 
     double C = 0.0;
-
-    for (int i = 0; i < 5; ++i)
+    // Calcualte concentration in cell (sum of distribution function - 9)
+    for (int i = 0; i < 4; ++i)
     {
         C += cell.getF_in(i);
     }
 
     cell.setC(C);
 
-    // Weights
-    double w0 = 1.0 / 3.0;
-    double w1 = 1.0 / 6.0;
+    // Weights D2Q4
+    double w = 1.0 / 4.0;
 
-    cell.setF_eq(0, w0 * C); // 0
-    cell.setF_eq(1, w1 * C); // N
-    cell.setF_eq(2, w1 * C); // E
-    cell.setF_eq(3, w1 * C); // S
-    cell.setF_eq(4, w1 * C); // W
+    // Calculate f_eq (equilibrium distribution function - 10)
+    for (int i = 0; i < 4; ++i)
+    {
+        double f_eq = w * C;
+        cell.setF_eq(i, f_eq);
+    }
 
-    // Collisions: f_out = f_in + (f_eq - f_in) / tau
-    for (int i = 0; i < 5; ++i)
+    // Collisions: f_out = f_in + (1.0 / tau) * (f_eq - f_in) - 11
+    for (int i = 0; i < 4; ++i)
     {
         double f_in = cell.getF_in(i);
         double f_eq = cell.getF_eq(i);
@@ -72,17 +70,19 @@ __global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int heig
     outCell.setWall(inCell.getWall());
     outCell.setC(inCell.getC());
 
-    int cx[5] = { 0, 0, 1, 0, -1 };
-    int cy[5] = { 0, 1, 0, -1, 0 };
+    int cx[4] = { 0, 1, 0, -1 };
+    int cy[4] = { 1, 0, -1, 0 };
+
+    int oppositeDir[4] = { 2, 3, 0, 1 };
 
     // For each f_in in outCell, we look for where f_out comes from:
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         // Coordinates of neighbour cell
         int nx = x - cx[i];
         int ny = y - cy[i];
 
-        double f_in_val = 0.0;
+        double f_inVal = 0.0;
 
         // Check if neighbor cell is within bounds
         if (nx >= 0 && nx < width && ny >= 0 && ny < height)
@@ -93,44 +93,41 @@ __global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int heig
             if (neighborCell.getWall())
             {
                 // bounce back
-                // 0 -> 0
-                // 1 (N) <-> 3 (S)
-                // 2 (E) <-> 4 (W)
-                int opposite[5] = { 0, 3, 4, 1, 2 };
-                f_in_val = neighborCell.getF_out(opposite[i]);
+                // 0 <-> 2 (N <-> S)
+                // 1 <-> 3 (E <-> W)
+                f_inVal = neighborCell.getF_out(oppositeDir[i]);
             }
             else // Just streaming
             {
-                f_in_val = neighborCell.getF_out(i);
+                f_inVal = neighborCell.getF_out(i);
             }
         }
         else
         {
             // Neighbor is out of bounds -> bounce back
-            int opposite[5] = { 0, 3, 4, 1, 2 };
-            f_in_val = inCell.getF_out(opposite[i]);
+            f_inVal = inCell.getF_out(oppositeDir[i]);
         }
 
-        outCell.setF_in(i, f_in_val);
-        outCell.setF_eq(i, inCell.getF_eq(i)); // From the previous collision step or copy
-        outCell.setF_out(i, f_in_val); // From inCell or reset to f_in_val
+        outCell.setF_in(i, f_inVal);
+        outCell.setF_eq(i, inCell.getF_eq(i)); // From the previous collision
+        outCell.setF_out(i, f_inVal); // Reset to f_in_val
     }
 
     gridOutput[idx] = outCell;
 }
 
-void collisionWrapper(Cell* grid, int width, int height)
+void collisionWrapper(Cell* grid, int width, int height, double tau)
 {
-    dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
+    dim3 blockSize(16, 16); // maxThreadsPerBlock = 1024
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
-    collision <<<gridSize, blockSize >>> (grid, width, height); // Start kernel
+    collision <<<gridSize, blockSize >>> (grid, width, height, tau); // Start kernel
     cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }
 
 void streamingWrapper(Cell* gridInput, Cell* gridOutput, int width, int height)
 {
-    dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
+    dim3 blockSize(16, 16); // maxThreadsPerBlock = 1024
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
     streaming <<<gridSize, blockSize >>> (gridInput, gridOutput, width, height); // Start kernel

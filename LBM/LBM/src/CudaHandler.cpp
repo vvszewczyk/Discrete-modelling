@@ -38,9 +38,9 @@ void CudaHandler::freeMemory()
 	cudaFree(gridOutput);
 }
 
-void CudaHandler::executeCollision()
+void CudaHandler::executeCollision(double tau)
 {
-	collisionWrapper(gridInput, gridWidth, gridHeight);
+	collisionWrapper(gridInput, gridWidth, gridHeight, tau);
 
 	cudaError_t err = cudaGetLastError();
 
