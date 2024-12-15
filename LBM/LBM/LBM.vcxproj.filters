@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{5d6db87a-2faf-49cb-9513-78d3b68f14e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sources">
+      <UniqueIdentifier>{c671d8bc-5a9b-4bf0-9e91-eed0311f48aa}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\CudaHandler.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Grid.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SimulationController.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\kernels.cu">
+      <Filter>Sources</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Cell.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CudaHandler.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Grid.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\kernels.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SimulationController.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
