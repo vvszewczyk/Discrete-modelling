@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cuda_runtime.h>
 #include "device_launch_parameters.h"
 
@@ -6,9 +6,9 @@ class Cell
 {
 private:
     bool isWall;
-    double f_in[4]; // Input values ??of the distribution function for 4 directions
-    double f_out[4]; // Output values ??of the distribution function for 4 directions
-    double f_eq[4]; // Values ??of the equilibrium distribution function for 4 directions (tr: equilibrium distribution - rozklad rownowagowy)
+    double f_in[4]; // Input values ​​of the distribution function for 4 directions
+    double f_out[4]; // Output values ​​of the distribution function for 4 directions
+    double f_eq[4]; // Values ​​of the equilibrium distribution function for 4 directions (tr: equilibrium distribution - rozklad rownowagowy)
     double C; // Concentration
 
 public:
