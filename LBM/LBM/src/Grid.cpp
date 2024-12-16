@@ -62,7 +62,7 @@ void Grid::initialize(bool defaultWall)
             double CInit = (x < width / 6) ? 1.0 : 0.0;
             cell.setC(CInit);
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 4; ++i)
             {
                 cell.setF_in(i, w * CInit);
                 cell.setF_eq(i, w * CInit);

@@ -26,9 +26,9 @@ private:
 
 	bool gridModified;
 	static const int minStepsPerFrame = 1;
-	static const int maxStepsPerFrame = 20;
+	static const int maxStepsPerFrame = 30;
 
-	double tau;
+	double tau; // Relaxation time
 
 public:
 	SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs);

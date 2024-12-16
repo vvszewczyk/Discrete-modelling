@@ -118,7 +118,7 @@ __global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int heig
 
 void collisionWrapper(Cell* grid, int width, int height, double tau)
 {
-    dim3 blockSize(16, 16); // maxThreadsPerBlock = 1024
+    dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
     collision <<<gridSize, blockSize >>> (grid, width, height, tau); // Start kernel
@@ -127,7 +127,7 @@ void collisionWrapper(Cell* grid, int width, int height, double tau)
 
 void streamingWrapper(Cell* gridInput, Cell* gridOutput, int width, int height)
 {
-    dim3 blockSize(16, 16); // maxThreadsPerBlock = 1024
+    dim3 blockSize(32, 32); // maxThreadsPerBlock = 1024
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
     streaming <<<gridSize, blockSize >>> (gridInput, gridOutput, width, height); // Start kernel

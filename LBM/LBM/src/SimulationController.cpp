@@ -107,7 +107,7 @@ void SimulationController::display()
 			else
 			{
 				double C = cell.getC();
-				// Thesis: C is between 0 and 1
+				// C is between 0 and 1
 				// Mapping C: 0 - black, 1 - white
 				if (C < 0.0) C = 0.0;
 				if (C > 1.0) C = 1.0;
