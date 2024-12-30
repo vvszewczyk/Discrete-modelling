@@ -6,7 +6,7 @@
 // Static pointer for current controller (GLUT REQUIRES IT)
 static SimulationController* controller = nullptr;
 
-SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false), tau(1.0)
+SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false), tau(1.0), mainWindowID(0), uxWindowID(0), uyWindowID(0)
 {
 	controller = this;
 	buttonLabelSS = "Start";
@@ -50,6 +50,13 @@ void SimulationController::resetSimulation()
 
 	cudaHandler->initializeDeviceGrids(grid->getGridData());
 
+	glutSetWindow(mainWindowID);
+	glutPostRedisplay();
+
+	glutSetWindow(uxWindowID);
+	glutPostRedisplay();
+
+	glutSetWindow(uyWindowID);
 	glutPostRedisplay();
 }
 
@@ -58,10 +65,11 @@ void SimulationController::initializeUI(int argc, char** argv)
 	glutInit(&argc, argv); // Initialise GLUT library
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize(windowWidth, windowHeight);
-	glutCreateWindow("LBM");
+	glutInitWindowPosition(100, 100);
+	mainWindowID = glutCreateWindow("LBM - density");
 
 	// Callbacks
-	glutDisplayFunc(display);
+	glutDisplayFunc(displayMain);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutMouseFunc(mouseHandler);
@@ -76,9 +84,21 @@ void SimulationController::initializeUI(int argc, char** argv)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, windowWidth, 0, windowHeight);
+
+	glutInitWindowSize(windowWidth / 2 - 20, windowHeight / 2 - 20);
+	glutInitWindowPosition(900, 100);
+	uxWindowID = glutCreateWindow("LBM - uX");
+	glutDisplayFunc(displayUx);
+
+	glutInitWindowSize(windowWidth / 2 - 20, windowHeight / 2 - 20);
+	glutInitWindowPosition(900, 520);
+	uyWindowID = glutCreateWindow("LBM - uY");
+	glutDisplayFunc(displayUy);
+
+	glutSetWindow(mainWindowID);
 }
 
-void SimulationController::display()
+void SimulationController::displayMain()
 {
 	glClear(GL_COLOR_BUFFER_BIT); // Clear last frame
 
@@ -106,12 +126,12 @@ void SimulationController::display()
 			}
 			else
 			{
-				double C = cell.getC();
-				// C is between 0 and 1
-				// Mapping C: 0 - black, 1 - white
-				if (C < 0.0) C = 0.0;
-				if (C > 1.0) C = 1.0;
-				glColor3f(C, C, C);
+				double rho = cell.getRho();
+				double val = rho;
+				if (val > 1.0) val = 1.0;
+				if (val < 0.0) val = 0.0;
+				glColor3f(val, val, val);
+
 			}
 
 			glRecti(
@@ -141,6 +161,96 @@ void SimulationController::display()
 	controller->drawButton(640, buttonViewportHeight / 2 - 15, 30, 30, "+");
 
 	glutSwapBuffers(); // Double buffer for smooth rendering
+}
+
+void SimulationController::displayUx()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	gluOrtho2D(0, controller->grid->getWidth(), 0, controller->grid->getHeight());
+
+	int width = controller->grid->getWidth();
+	int height = controller->grid->getHeight();
+
+	for (int y = 0; y < height; ++y)
+	{
+		for (int x = 0; x < width; ++x)
+		{
+			const Cell& cell = controller->grid->getCell(x, y);
+
+			if (cell.getWall())
+			{
+				glColor3f(0.0f, 1.0f, 0.0f);
+			}
+			else
+			{
+				double ux = cell.getUx();
+				double val = fabs(ux);
+				if (val > 1.0) val = 1.0;
+
+				// Negative = purple, positive = green
+				if (ux > 0)
+				{
+					glColor3f(0.0, val, 0.0);
+				}
+				else
+				{
+					glColor3f(val, 0.0, val);
+				}
+			}
+
+			glRecti(x, y, x + 1, y + 1);
+		}
+	}
+
+	glutSwapBuffers();
+}
+
+void SimulationController::displayUy()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	gluOrtho2D(0, controller->grid->getWidth(), 0, controller->grid->getHeight());
+
+	int width = controller->grid->getWidth();
+	int height = controller->grid->getHeight();
+
+	for (int y = 0; y < height; ++y)
+	{
+		for (int x = 0; x < width; ++x)
+		{
+			const Cell& cell = controller->grid->getCell(x, y);
+
+			if (cell.getWall())
+			{
+				glColor3f(0.0f, 1.0f, 0.0f);
+			}
+			else
+			{
+				double uy = cell.getUy();
+				double val = fabs(uy);
+				if (val > 1.0) val = 1.0;
+
+				// Negative = purple, positive = green
+				if (uy > 0)
+				{
+					glColor3f(0.0, val, 0.0);
+				}
+				else
+				{
+					glColor3f(val, 0.0, val);
+				}
+			}
+
+			glRecti(x, y, x + 1, y + 1);
+		}
+	}
+
+	glutSwapBuffers();
 }
 
 void SimulationController::reshape(int w, int h)
@@ -282,6 +392,14 @@ void SimulationController::motionHandler(int x, int y)
 			}
 
 			controller->gridModified = true;
+
+			glutSetWindow(mainWindowID);
+			glutPostRedisplay();
+
+			glutSetWindow(uxWindowID);
+			glutPostRedisplay();
+
+			glutSetWindow(uyWindowID);
 			glutPostRedisplay();
 		}
 	}
@@ -312,6 +430,15 @@ void SimulationController::updateSimulation()
 	}
 
 	cudaHandler->copyGridToCPU(grid->getGridData());
+	// Odœwie¿ okno g³ówne:
+	glutSetWindow(mainWindowID);
+	glutPostRedisplay();
 
+	// Odœwie¿ okno u_x:
+	glutSetWindow(uxWindowID);
+	glutPostRedisplay();
+
+	// Odœwie¿ okno u_y:
+	glutSetWindow(uyWindowID);
 	glutPostRedisplay(); // Marks the current window as needing to be redisplayed
 }
