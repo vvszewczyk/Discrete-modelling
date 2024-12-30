@@ -4,22 +4,22 @@
 
 Grid::Grid(int w, int h) : width(w), height(h)
 {
-    grid = new Cell[width * height];
+    this->grid = new Cell[this->width * this->height];
 }
 
 Grid::~Grid()
 {
-    delete[] grid;
+    delete[] this->grid;
 }
 
 Cell* Grid::getGridData()
 {
-    return grid;
+    return this->grid;
 }
 
 const Cell* Grid::getGridData() const
 {
-    return grid;
+    return this->grid;
 }
 
 int Grid::getWidth() const
@@ -34,29 +34,29 @@ int Grid::getHeight() const
 
 Cell& Grid::getCell(int x, int y)
 {
-    return grid[y * width + x];
+    return this->grid[y * this->width + x];
 }
 
 const Cell& Grid::getCell(int x, int y) const
 {
-    return grid[y * width + x];
+    return this->grid[y * this->width + x];
 }
 
 void Grid::setCell(int x, int y, const Cell& cell)
 {
-    grid[y * width + x] = cell;
+    this->grid[y * this->width + x] = cell;
 }
 
 void Grid::initialize(bool defaultWall)
 {
     resetGrid(); // Clear new walls
 
-    for (int y = 0; y < height; ++y)
+    for (int y = 0; y < this->height; ++y)
     {
-        for (int x = 0; x < width; ++x)
+        for (int x = 0; x < this->width; ++x)
         {
             Cell& cell = getCell(x, y);
-            double rhoInit = (x < width / 2) ? 1.0 : 0.5;
+            double rhoInit = (x < this->width / 2) ? 1.0 : 0.5;
             cell.setRho(rhoInit);
             cell.setUx(0.0);
             cell.setUy(0.0);
@@ -69,14 +69,14 @@ void Grid::initialize(bool defaultWall)
                 cell.setF_out(i, feq);
             }
 
-            if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
+            if (x == 0 || x == this->width - 1 || y == 0 || y == this->height - 1)
             {
                 cell.setWall(true);
             }
 
-            int wallColumn = width / 2;
-            int gapStart = height / 3;
-            int gapEnd = 2 * height / 3;
+            int wallColumn = this->width / 2;
+            int gapStart = this->height / 3;
+            int gapEnd = 2 * this->height / 3;
 
             if (x == wallColumn && (y < gapStart || y > gapEnd))
             {
@@ -88,8 +88,8 @@ void Grid::initialize(bool defaultWall)
 
 void Grid::resetGrid()
 {
-    for (int i = 0; i < width * height; ++i)
+    for (int i = 0; i < this->width * this->height; ++i)
     {
-        grid[i].resetCell();
+        this->grid[i].resetCell();
     }
 }

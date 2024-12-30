@@ -15,32 +15,32 @@ CudaHandler::~CudaHandler()
 
 void CudaHandler::allocateMemory()
 {
-	size_t size = gridWidth * gridHeight * sizeof(Cell); // Compute size of memory required to allocate grid
-	cudaMalloc((void**)&gridInput, size);
-	cudaMalloc((void**)&gridOutput, size);
+	size_t size = this->gridWidth * this->gridHeight * sizeof(Cell); // Compute size of memory required to allocate grid
+	cudaMalloc((void**)&this->gridInput, size);
+	cudaMalloc((void**)&this->gridOutput, size);
 }
 
 void CudaHandler::copyGridToGPU(const Cell* grid)
 {
-	size_t size = gridWidth * gridHeight * sizeof(Cell);
-	cudaMemcpy(gridInput, grid, size, cudaMemcpyHostToDevice);
+	size_t size = this->gridWidth * this->gridHeight * sizeof(Cell);
+	cudaMemcpy(this->gridInput, grid, size, cudaMemcpyHostToDevice);
 }
 
 void CudaHandler::copyGridToCPU(Cell* grid)
 {
-	size_t size = gridWidth * gridHeight * sizeof(Cell);
-	cudaMemcpy(grid, gridInput, size, cudaMemcpyDeviceToHost);
+	size_t size = this->gridWidth * this->gridHeight * sizeof(Cell);
+	cudaMemcpy(grid, this->gridInput, size, cudaMemcpyDeviceToHost);
 }
 
 void CudaHandler::freeMemory()
 {
-	cudaFree(gridInput);
-	cudaFree(gridOutput);
+	cudaFree(this->gridInput);
+	cudaFree(this->gridOutput);
 }
 
 void CudaHandler::executeCollision(double tau)
 {
-	collisionWrapper(gridInput, gridWidth, gridHeight, tau);
+	collisionWrapper(this->gridInput, this->gridWidth, this->gridHeight, tau);
 
 	cudaError_t err = cudaGetLastError();
 
@@ -52,11 +52,11 @@ void CudaHandler::executeCollision(double tau)
 
 void CudaHandler::executeStreaming()
 {
-	streamingWrapper(gridInput, gridOutput, gridWidth, gridHeight);
+	streamingWrapper(this->gridInput, this->gridOutput, this->gridWidth, this->gridHeight);
 
-	Cell* temp = gridInput;
-	gridInput = gridOutput;
-	gridOutput = temp;
+	Cell* temp = this->gridInput;
+	this->gridInput = this->gridOutput;
+	this->gridOutput = temp;
 
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess)
@@ -68,8 +68,8 @@ void CudaHandler::executeStreaming()
 
 void CudaHandler::initializeDeviceGrids(const Cell* grid)
 {
-	size_t size = gridWidth * gridHeight * sizeof(Cell);
-	cudaMemcpy(gridInput, grid, size, cudaMemcpyHostToDevice);
-	cudaMemcpy(gridOutput, grid, size, cudaMemcpyHostToDevice);
+	size_t size = this->gridWidth * this->gridHeight * sizeof(Cell);
+	cudaMemcpy(this->gridInput, grid, size, cudaMemcpyHostToDevice);
+	cudaMemcpy(this->gridOutput, grid, size, cudaMemcpyHostToDevice);
 }
 

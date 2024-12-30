@@ -17,94 +17,94 @@ public:
     {
         for (int i = 0; i < 9; ++i)
         {
-            f_in[i] = 0.0;
-            f_out[i] = 0.0;
-            f_eq[i] = 0.0;
+            this->f_in[i] = 0.0;
+            this->f_out[i] = 0.0;
+            this->f_eq[i] = 0.0;
         }
     }
 
     __host__ __device__ void setWall(bool value)
     {
-        isWall = value;
+        this->isWall = value;
     }
 
     __host__ __device__ bool getWall() const
     {
-        return isWall;
+        return this->isWall;
     }
 
     __host__ __device__ void setF_in(int i, double val) 
     { 
-        f_in[i] = val; 
+        this->f_in[i] = val;
     }
 
     __host__ __device__ double getF_in(int i) const 
     { 
-        return f_in[i]; 
+        return this->f_in[i];
     }
 
     __host__ __device__ void setF_out(int i, double val) 
     { 
-        f_out[i] = val; 
+        this->f_out[i] = val;
     }
 
     __host__ __device__ double getF_out(int i) const 
     { 
-        return f_out[i]; 
+        return this->f_out[i];
     }
 
     __host__ __device__ void setF_eq(int i, double val) 
     {
-        f_eq[i] = val; 
+        this->f_eq[i] = val;
     }
 
     __host__ __device__ double getF_eq(int i) const 
     { 
-        return f_eq[i]; 
+        return this->f_eq[i];
     }
 
     __host__ __device__ void setRho(double val) 
     { 
-        rho = val; 
+        this->rho = val;
     }
 
     __host__ __device__ double getRho() const 
     { 
-        return rho; 
+        return this->rho;
     }
 
     __host__ __device__ void setUx(double val)
     {
-        ux = val;
+        this->ux = val;
     }
 
     __host__ __device__ double getUx() const 
     {
-        return ux; 
+        return this->ux;
     }
 
     __host__ __device__ void setUy(double val) 
     { 
-        uy = val; 
+        this->uy = val;
     }
 
     __host__ __device__ double getUy() const 
     { 
-        return uy; 
+        return this->uy;
     }
 
     __host__ __device__ void resetCell()
     {
-        isWall = false;
-        rho = 0.0;
-        ux = 0.0;
-        uy = 0.0;
+        this->isWall = false;
+        this->rho = 0.0;
+        this->ux = 0.0;
+        this->uy = 0.0;
 
         for (int i = 0; i < 9; ++i)
         {
-            f_in[i] = 0.0;
-            f_out[i] = 0.0;
-            f_eq[i] = 0.0;
+            this->f_in[i] = 0.0;
+            this->f_out[i] = 0.0;
+            this->f_eq[i] = 0.0;
         }
     }
 };

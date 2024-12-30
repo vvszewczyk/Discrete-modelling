@@ -9,54 +9,54 @@ static SimulationController* controller = nullptr;
 SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false), tau(1.0), mainWindowID(0), uxWindowID(0), uyWindowID(0)
 {
 	controller = this;
-	buttonLabelSS = "Start";
-	buttonLabelWE = "Wall";
+	this->buttonLabelSS = "Start";
+	this->buttonLabelWE = "Wall";
 };
 
 SimulationController::~SimulationController() {}
 
 void SimulationController::startSimulation()
 {
-	isRunning = true;
+	this->isRunning = true;
 }
 
 void SimulationController::stopSimulation()
 {
-	isRunning = false;
+	this->isRunning = false;
 }
 
 void SimulationController::toggleSimulation()
 {
-	isRunning = !isRunning;
-	buttonLabelSS = isRunning ? "Stop" : "Start";
+	this->isRunning = !isRunning;
+	this->buttonLabelSS = isRunning ? "Stop" : "Start";
 
 	if (isRunning)
 	{
-		gridModified = true;
+		this->gridModified = true;
 	}
 }
 
 void SimulationController::toggleWallPlacement()
 {
-	placingWalls = !placingWalls;
-	buttonLabelWE = placingWalls ? "Empty" : "Wall";
+	this->placingWalls = !placingWalls;
+	this->buttonLabelWE = placingWalls ? "Empty" : "Wall";
 }
 
 void SimulationController::resetSimulation()
 {
-	isRunning = false;
-	grid->initialize();
-	buttonLabelSS = "Start";
+	this->isRunning = false;
+	this->grid->initialize();
+	this->buttonLabelSS = "Start";
 
-	cudaHandler->initializeDeviceGrids(grid->getGridData());
+	this->cudaHandler->initializeDeviceGrids(this->grid->getGridData());
 
-	glutSetWindow(mainWindowID);
+	glutSetWindow(this->mainWindowID);
 	glutPostRedisplay();
 
-	glutSetWindow(uxWindowID);
+	glutSetWindow(this->uxWindowID);
 	glutPostRedisplay();
 
-	glutSetWindow(uyWindowID);
+	glutSetWindow(this->uyWindowID);
 	glutPostRedisplay();
 }
 
@@ -64,9 +64,9 @@ void SimulationController::initializeUI(int argc, char** argv)
 {
 	glutInit(&argc, argv); // Initialise GLUT library
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(windowWidth, windowHeight);
+	glutInitWindowSize(this->windowWidth, this->windowHeight);
 	glutInitWindowPosition(100, 100);
-	mainWindowID = glutCreateWindow("LBM - density");
+	this->mainWindowID = glutCreateWindow("LBM - density");
 
 	// Callbacks
 	glutDisplayFunc(displayMain);
@@ -83,19 +83,19 @@ void SimulationController::initializeUI(int argc, char** argv)
 		});
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0, windowWidth, 0, windowHeight);
+	gluOrtho2D(0, this->windowWidth, 0, this->windowHeight);
 
-	glutInitWindowSize(windowWidth / 2 - 20, windowHeight / 2 - 20);
+	glutInitWindowSize(this->windowWidth / 2 - 20, this->windowHeight / 2 - 20);
 	glutInitWindowPosition(900, 100);
-	uxWindowID = glutCreateWindow("LBM - uX");
+	this->uxWindowID = glutCreateWindow("LBM - uX");
 	glutDisplayFunc(displayUx);
 
-	glutInitWindowSize(windowWidth / 2 - 20, windowHeight / 2 - 20);
+	glutInitWindowSize(this->windowWidth / 2 - 20, this->windowHeight / 2 - 20);
 	glutInitWindowPosition(900, 520);
-	uyWindowID = glutCreateWindow("LBM - uY");
+	this->uyWindowID = glutCreateWindow("LBM - uY");
 	glutDisplayFunc(displayUy);
 
-	glutSetWindow(mainWindowID);
+	glutSetWindow(this->mainWindowID);
 }
 
 void SimulationController::displayMain()
@@ -415,29 +415,29 @@ void SimulationController::staticMotionHandler(int x, int y)
 
 void SimulationController::updateSimulation()
 {
-	if (gridModified)
+	if (this->gridModified)
 	{
-		cudaHandler->copyGridToGPU(grid->getGridData());
-		gridModified = false;
+		this->cudaHandler->copyGridToGPU(grid->getGridData());
+		this->gridModified = false;
 	}
 
 	for (int i = 0; i < stepsPerFrame; ++i)
 	{
 		// No need to copy grid to GPU, kernels work directly on iy
-		cudaHandler->executeCollision(tau);
-		cudaHandler->executeStreaming();
+		this->cudaHandler->executeCollision(this->tau);
+		this->cudaHandler->executeStreaming();
 	}
 
-	cudaHandler->copyGridToCPU(grid->getGridData());
+	this->cudaHandler->copyGridToCPU(grid->getGridData());
 	// Odœwie¿ okno g³ówne:
-	glutSetWindow(mainWindowID);
+	glutSetWindow(this->mainWindowID);
 	glutPostRedisplay();
 
 	// Odœwie¿ okno u_x:
-	glutSetWindow(uxWindowID);
+	glutSetWindow(this->uxWindowID);
 	glutPostRedisplay();
 
 	// Odœwie¿ okno u_y:
-	glutSetWindow(uyWindowID);
+	glutSetWindow(this->uyWindowID);
 	glutPostRedisplay(); // Marks the current window as needing to be redisplayed
 }
