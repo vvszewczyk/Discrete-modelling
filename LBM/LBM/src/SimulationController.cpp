@@ -130,8 +130,7 @@ void SimulationController::displayMain()
 				double val = rho;
 				if (val > 1.0) val = 1.0;
 				if (val < 0.0) val = 0.0;
-				glColor3f(val, val, val);
-
+				glColor3f(static_cast<GLfloat>(val), static_cast<GLfloat>(val), static_cast<GLfloat>(val));
 			}
 
 			glRecti(
@@ -150,15 +149,15 @@ void SimulationController::displayMain()
 	gluOrtho2D(0, controller->windowWidth, 0, buttonViewportHeight);
 
 	// Buttons placement
-	controller->drawButton(5, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelSS.c_str());
-	controller->drawButton(120, buttonViewportHeight / 2 - 15, 100, 30, "Reset");
-	controller->drawButton(235, buttonViewportHeight / 2 - 15, 100, 30, controller->buttonLabelWE.c_str());
-	controller->drawButton(360, buttonViewportHeight / 2 - 15, 30, 30, "-");
-	controller->drawButton(400, buttonViewportHeight / 2 - 15, 60, 30, std::to_string(controller->stepsPerFrame).c_str());
-	controller->drawButton(470, buttonViewportHeight / 2 - 15, 30, 30, "+");
-	controller->drawButton(530, buttonViewportHeight / 2 - 15, 30, 30, "-");
-	controller->drawButton(570, buttonViewportHeight / 2 - 15, 60, 30, std::to_string(controller->tau).c_str());
-	controller->drawButton(640, buttonViewportHeight / 2 - 15, 30, 30, "+");
+	controller->drawButton(5, buttonViewportHeight / 2.f - 15.f, 100, 30, controller->buttonLabelSS.c_str());
+	controller->drawButton(120, buttonViewportHeight / 2.f - 15.f, 100, 30, "Reset");
+	controller->drawButton(235, buttonViewportHeight / 2.f - 15.f, 100, 30, controller->buttonLabelWE.c_str());
+	controller->drawButton(360, buttonViewportHeight / 2.f - 15.f, 30, 30, "-");
+	controller->drawButton(400, buttonViewportHeight / 2.f - 15.f, 60, 30, std::to_string(controller->stepsPerFrame).c_str());
+	controller->drawButton(470, buttonViewportHeight / 2.f - 15.f, 30, 30, "+");
+	controller->drawButton(530, buttonViewportHeight / 2.f - 15.f, 30, 30, "-");
+	controller->drawButton(570, buttonViewportHeight / 2.f - 15.f, 60, 30, std::to_string(controller->tau).c_str());
+	controller->drawButton(640, buttonViewportHeight / 2.f - 15.f, 30, 30, "+");
 
 	glutSwapBuffers(); // Double buffer for smooth rendering
 }
@@ -193,11 +192,11 @@ void SimulationController::displayUx()
 				// Negative = purple, positive = green
 				if (ux > 0)
 				{
-					glColor3f(0.0, val, 0.0);
+					glColor3f(0.0, static_cast<GLfloat>(val), 0.0);
 				}
 				else
 				{
-					glColor3f(val, 0.0, val);
+					glColor3f(static_cast<GLfloat>(val), 0.0, static_cast<GLfloat>(val));
 				}
 			}
 
@@ -238,11 +237,11 @@ void SimulationController::displayUy()
 				// Negative = purple, positive = green
 				if (uy > 0)
 				{
-					glColor3f(0.0, val, 0.0);
+					glColor3f(0.0, static_cast<GLfloat>(val), 0.0);
 				}
 				else
 				{
-					glColor3f(val, 0.0, val);
+					glColor3f(static_cast<GLfloat>(val), 0.0, static_cast<GLfloat>(val));
 				}
 			}
 
