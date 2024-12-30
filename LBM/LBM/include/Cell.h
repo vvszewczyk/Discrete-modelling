@@ -6,15 +6,16 @@ class Cell
 {
 private:
     bool isWall;
-    double f_in[4]; // Input values ​​of the distribution function for 4 directions
-    double f_out[4]; // Output values ​​of the distribution function for 4 directions
-    double f_eq[4]; // Values ​​of the equilibrium distribution function for 4 directions (tr: equilibrium distribution - rozklad rownowagowy)
-    double C; // Concentration
-
+    double f_in[9]; // Input values ​​of the distribution function for 4 directions
+    double f_out[9]; // Output values ​​of the distribution function for 4 directions
+    double f_eq[9]; // Values ​​of the equilibrium distribution function for 4 directions (tr: equilibrium distribution - rozklad rownowagowy)
+    double rho; // Density, for difusion it was C - concentration
+    double ux; // Velocity x
+    double uy; // Velocity y
 public:
-    __host__ __device__ Cell(bool w = false) : isWall(w), C(0.0)
+    __host__ __device__ Cell(bool w = false) : isWall(w), rho(0.0), ux(0.0), uy(0.0)
     {
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 9; ++i)
         {
             f_in[i] = 0.0;
             f_out[i] = 0.0;
@@ -62,21 +63,44 @@ public:
         return f_eq[i]; 
     }
 
-    __host__ __device__ void setC(double val) 
+    __host__ __device__ void setRho(double val) 
     { 
-        C = val; 
+        rho = val; 
     }
 
-    __host__ __device__ double getC() const 
+    __host__ __device__ double getRho() const 
     { 
-        return C; 
+        return rho; 
+    }
+
+    __host__ __device__ void setUx(double val)
+    {
+        ux = val;
+    }
+
+    __host__ __device__ double getUx() const 
+    {
+        return ux; 
+    }
+
+    __host__ __device__ void setUy(double val) 
+    { 
+        uy = val; 
+    }
+
+    __host__ __device__ double getUy() const 
+    { 
+        return uy; 
     }
 
     __host__ __device__ void resetCell()
     {
         isWall = false;
-        C = 0.0;
-        for (int i = 0; i < 4; ++i)
+        rho = 0.0;
+        ux = 0.0;
+        uy = 0.0;
+
+        for (int i = 0; i < 9; ++i)
         {
             f_in[i] = 0.0;
             f_out[i] = 0.0;
