@@ -12,6 +12,9 @@ private:
 	Grid* grid; // Pointer on grid
 	CudaHandler* cudaHandler; // Pointer on CUDA handler
 	bool isRunning; // Simulation flag
+	int mainWindowID;
+	int uxWindowID;
+	int uyWindowID;
 
 	// Size of window
 	int windowWidth;
@@ -42,7 +45,9 @@ public:
 	void resetSimulation();
 
 	void initializeUI(int argc, char** argv); // Initialise UI, set OpenGL and GLUT
-	static void display(); // Function for OpenGL for drawing
+	static void displayMain(); // Draw main window
+	static void displayUx(); // Draw X velocioty window
+	static void displayUy(); // Draw Y velocioty window
 	static void reshape(int w, int h); // Change size of window
 	static void keyboard(unsigned char key, int x, int y); // Keyboard input operation
 
