@@ -30,6 +30,7 @@ private:
 	bool gridModified;
 	static const int minStepsPerFrame = 1;
 	static const int maxStepsPerFrame = 30;
+	int totalIterations;
 
 	double tau; // Relaxation time
 
@@ -52,6 +53,7 @@ public:
 	static void keyboard(unsigned char key, int x, int y); // Keyboard input operation
 
 	void drawButton(float x, float y, float width, float height, const char* label);
+	static void drawString(float x, float y, const char* text, void* font);
 	static void mouseHandler(int button, int state, int x, int y); // Button managment
 	void motionHandler(int x, int y); // Mouse managment in case when LMB pressed
 	static void staticMotionHandler(int x, int y); // Motion handler but static

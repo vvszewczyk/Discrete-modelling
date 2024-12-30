@@ -6,7 +6,7 @@
 // Static pointer for current controller (GLUT REQUIRES IT)
 static SimulationController* controller = nullptr;
 
-SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false), tau(1.0), mainWindowID(0), uxWindowID(0), uyWindowID(0)
+SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, int height, int cs) : grid(g), cudaHandler(ch), windowHeight(height), windowWidth(width), cellSize(cs), isRunning(false), placingWalls(false), stepsPerFrame(1), gridModified(false), tau(1.0), mainWindowID(0), uxWindowID(0), uyWindowID(0), totalIterations(0)
 {
 	controller = this;
 	this->buttonLabelSS = "Start";
@@ -47,6 +47,7 @@ void SimulationController::resetSimulation()
 	this->isRunning = false;
 	this->grid->initialize();
 	this->buttonLabelSS = "Start";
+	this->totalIterations = 0;
 
 	this->cudaHandler->initializeDeviceGrids(this->grid->getGridData());
 
@@ -159,6 +160,14 @@ void SimulationController::displayMain()
 	controller->drawButton(570, buttonViewportHeight / 2.f - 15.f, 60, 30, std::to_string(controller->tau).c_str());
 	controller->drawButton(640, buttonViewportHeight / 2.f - 15.f, 30, 30, "+");
 
+	// Iteration string
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	std::string iterationText = "Iterations: " + std::to_string(controller->totalIterations);
+
+	// Rysuj tekst
+	controller->drawButton(700 - 10, buttonViewportHeight / 2.f - 15.f, 100, 30, " ");
+	controller->drawString(700, buttonViewportHeight / 2.f - 5.f, iterationText.c_str(), GLUT_BITMAP_HELVETICA_12);
 	glutSwapBuffers(); // Double buffer for smooth rendering
 }
 
@@ -298,6 +307,15 @@ void SimulationController::drawButton(float x, float y, float width, float heigh
 	}
 }
 
+void SimulationController::drawString(float x, float y, const char* text, void* font = GLUT_BITMAP_HELVETICA_12)
+{
+	glRasterPos2f(x, y);
+	for (const char* c = text; *c != '\0'; ++c)
+	{
+		glutBitmapCharacter(font, *c);
+	}
+}
+
 void SimulationController::mouseHandler(int button, int state, int x, int y)
 {
 	y = controller->windowHeight - y; // Converting position (correct with OpenGL)
@@ -427,6 +445,8 @@ void SimulationController::updateSimulation()
 		this->cudaHandler->executeCollision(this->tau);
 		this->cudaHandler->executeStreaming();
 	}
+
+	totalIterations += stepsPerFrame;
 
 	this->cudaHandler->copyGridToCPU(grid->getGridData());
 	// Odœwie¿ okno g³ówne:
