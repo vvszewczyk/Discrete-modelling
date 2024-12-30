@@ -6,8 +6,8 @@
 int main(int argc, char** argv)
 {
 	// Grid size
-	const int gridWidth = 200;
-	const int gridHeight = 200;
+	const int gridWidth = 400;
+	const int gridHeight = 400;
 
 	cudaDeviceProp prop;
 	cudaGetDeviceProperties(&prop, 0); // 0 is the device ID
