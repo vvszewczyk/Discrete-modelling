@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Cell.h"
+#include "kernels.h"
 
 class Grid
 {
