@@ -51,22 +51,26 @@ void Grid::initialize(bool defaultWall)
 {
     resetGrid(); // Clear new walls
 
-    // D2Q4 weights
-    double w = 1.0 / 4.0;
+    // D2Q9 weights
+    double w[9] = { 4.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0,
+                   1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0 };
 
     for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
         {
             Cell& cell = getCell(x, y);
-            double CInit = (x < width / 6) ? 1.0 : 0.0;
-            cell.setC(CInit);
+            double rhoInit = (x < width / 2) ? 1.0 : 0.5;
+            cell.setRho(rhoInit);
+            cell.setUx(0.0);
+            cell.setUy(0.0);
 
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 9; ++i)
             {
-                cell.setF_in(i, w * CInit);
-                cell.setF_eq(i, w * CInit);
-                cell.setF_out(i, w * CInit);
+                double feq = w[i] * rhoInit; // u=0 -> (c_i · u)=0, => f_i^{eq} = w_i * rho
+                cell.setF_in(i, feq);
+                cell.setF_eq(i, feq);
+                cell.setF_out(i, feq);
             }
 
             if (x == 0 || x == width - 1 || y == 0 || y == height - 1)
@@ -74,7 +78,7 @@ void Grid::initialize(bool defaultWall)
                 cell.setWall(true);
             }
 
-            int wallColumn = width / 6;
+            int wallColumn = width / 2;
             int gapStart = height / 3;
             int gapEnd = 2 * height / 3;
 
