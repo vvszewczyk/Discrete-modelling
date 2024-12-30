@@ -51,10 +51,6 @@ void Grid::initialize(bool defaultWall)
 {
     resetGrid(); // Clear new walls
 
-    // D2Q9 weights
-    double w[9] = { 4.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0,
-                   1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0 };
-
     for (int y = 0; y < height; ++y)
     {
         for (int x = 0; x < width; ++x)
@@ -65,7 +61,7 @@ void Grid::initialize(bool defaultWall)
             cell.setUx(0.0);
             cell.setUy(0.0);
 
-            for (int i = 0; i < 9; ++i)
+            for (int i = 0; i < Q9; ++i)
             {
                 double feq = w[i] * rhoInit; // u=0 -> (c_i · u)=0, => f_i^{eq} = w_i * rho
                 cell.setF_in(i, feq);
