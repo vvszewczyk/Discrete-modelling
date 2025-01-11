@@ -195,8 +195,10 @@ void SimulationController::displayUx()
 			else
 			{
 				double ux = cell.getUx();
-				double val = fabs(ux);
+				double val = fabs(ux) * 50;
 				if (val > 1.0) val = 1.0;
+
+				//val *= 75.0;
 
 				// Negative = purple, positive = green
 				if (ux > 0)
@@ -240,8 +242,10 @@ void SimulationController::displayUy()
 			else
 			{
 				double uy = cell.getUy();
-				double val = fabs(uy);
+				double val = fabs(uy) * 50;
 				if (val > 1.0) val = 1.0;
+
+				//val *= 75.0;
 
 				// Negative = purple, positive = green
 				if (uy > 0)
@@ -443,6 +447,9 @@ void SimulationController::updateSimulation()
 	{
 		// No need to copy grid to GPU, kernels work directly on iy
 		this->cudaHandler->executeCollision(this->tau);
+
+		boundaryWrapper(this->cudaHandler->getGridInputPtr(), this->grid->getWidth(), this->grid->getHeight());
+
 		this->cudaHandler->executeStreaming();
 	}
 
