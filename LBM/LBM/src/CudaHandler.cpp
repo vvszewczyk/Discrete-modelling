@@ -13,6 +13,11 @@ CudaHandler::~CudaHandler()
 	freeMemory();
 }
 
+Cell* CudaHandler::getGridInputPtr() 
+{ 
+	return this->gridInput; 
+}
+
 void CudaHandler::allocateMemory()
 {
 	size_t size = this->gridWidth * this->gridHeight * sizeof(Cell); // Compute size of memory required to allocate grid
