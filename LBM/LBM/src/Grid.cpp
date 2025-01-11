@@ -56,7 +56,7 @@ void Grid::initialize(bool defaultWall)
         for (int x = 0; x < this->width; ++x)
         {
             Cell& cell = getCell(x, y);
-            double rhoInit = (x < this->width / 2) ? 1.0 : 0.5;
+            double rhoInit = 1.0;
             cell.setRho(rhoInit);
             cell.setUx(0.0);
             cell.setUy(0.0);
@@ -69,7 +69,7 @@ void Grid::initialize(bool defaultWall)
                 cell.setF_out(i, feq);
             }
 
-            if (x == 0 || x == this->width - 1 || y == 0 || y == this->height - 1)
+            /*if (x == 0 || x == this->width - 1 || y == 0 || y == this->height - 1)
             {
                 cell.setWall(true);
             }
@@ -81,7 +81,7 @@ void Grid::initialize(bool defaultWall)
             if (x == wallColumn && (y < gapStart || y > gapEnd))
             {
                 cell.setWall(true);
-            }
+            }*/
         }
     }
 }
