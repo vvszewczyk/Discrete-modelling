@@ -11,6 +11,7 @@ __device__ const int cy[Q9] = { 0, 0,  0, 1, -1, 1,  1, -1, -1 }; // Y direction
 
 __global__ void collision(Cell* d_grid, int width, int height, double tau);
 __global__ void streaming(Cell* d_gridInput, Cell* d_gridOutput, int width, int height);
+__global__ void boundaryConditions(Cell* d_gird, int width, int height);
 
 __device__ __host__ int findOpposite(int i); // Find opposite direction based on i		// i:    0, 1, 2, 3, 4, 5, 6, 7, 8
 																						// opp:  0, 2, 1, 4, 3, 7, 8, 5, 6
@@ -18,3 +19,4 @@ __device__ __host__ int findOpposite(int i); // Find opposite direction based on
 // Wrapper functions to call from host code
 void collisionWrapper(Cell* d_grid, int width, int height, double tau);
 void streamingWrapper(Cell* d_gridInput, Cell* d_gridOutput, int width, int height);
+void boundaryWrapper(Cell* grid, int width, int height);
