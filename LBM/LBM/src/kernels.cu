@@ -125,27 +125,19 @@ __global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int heig
         double f_inVal = 0.0;
 
         // Check if neighbor cell is within bounds
+
         if (nx < 0 || nx >= width || ny < 0 || ny >= height)
         {
-            int opposite = findOpposite(i);
-            f_inVal = inCell.getF_out(opposite);
+            // np. outflow 
+            f_inVal = 0.0;
         }
         else
         {
             int neighborIdx = ny * width + nx;
             const Cell& neighborCell = gridInput[neighborIdx];
-
-            if (neighborCell.getWall())
-            {
-                // bounce back from wall
-                int opposite = findOpposite(i);
-                f_inVal = neighborCell.getF_out(opposite);
-            }
-            else // Just streaming
-            {
-                f_inVal = neighborCell.getF_out(i);
-            }
+            f_inVal = neighborCell.getF_out(i);
         }
+
 
         outCell.setF_in(i, f_inVal);
         outCell.setF_eq(i, inCell.getF_eq(i)); // From the previous collision
@@ -154,6 +146,71 @@ __global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int heig
 
     gridOutput[idx] = outCell;
 }
+
+__global__ void boundaryConditions(Cell* grid, int width, int height)
+{
+    // x and y indices for the current thread
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height)
+        return;
+
+    // Not boundary = do nothing
+    bool isTop = (y == height - 1);
+    bool isBottom = (y == 0);
+    bool isLeft = (x == 0);
+    bool isRight = (x == width - 1);
+
+    if (!isTop && !isBottom && !isLeft && !isRight)
+        return; // Inside grid
+
+    int idx = y * width + x;
+    Cell& cell = grid[idx];
+
+    double rhoBC = 1.0;
+    double uxBC = 0.0;
+    double uyBC = 0.0;
+
+    // Top: ux=0.02
+    if (isTop) 
+    {
+        uxBC = 0.02;
+        uyBC = 0.0;
+    }
+    // Bottom: ux=0.0
+    if (isBottom) 
+    {
+        uxBC = 0.0;
+        uyBC = 0.0;
+    }
+    // Left and right: linear change from bottom to top <0.0, 0.02>
+    //    "alpha" - position <0.0, 1.0>
+    if (isLeft || isRight) 
+    {
+        double alpha = (double)y / (double)(height - 1);
+        uxBC = 0.0 + (0.02 - 0.0) * alpha; // growing from 0.0 (y=0) to 0.02 (y=height-1)
+        uyBC = 0.0;
+    }
+
+    cell.setRho(rhoBC);
+    cell.setUx(uxBC);
+    cell.setUy(uyBC);
+
+    // f_i^eq = w_i * rhoBC * [1 + 3(c_i·uBC) + 4.5(c_i·uBC)^2 - 1.5(uBC^2)]
+    // Overriting f_out[i] = feq[i], becuase we set boundary condition
+    double ux2 = uxBC * uxBC;
+    double uy2 = uyBC * uyBC;
+    double uu = ux2 + uy2;
+
+    for (int i = 0; i < Q9; ++i)
+    {
+        double cidotU = (double)cx[i] * uxBC + (double)cy[i] * uyBC; // c_i · u
+        double feq = w[i] * rhoBC * (1.0 + 3.0 * cidotU + 4.5 * (cidotU * cidotU) - 1.5 * uu);
+        cell.setF_out(i, feq);
+    }
+}
+
 
 void collisionWrapper(Cell* grid, int width, int height, double tau)
 {
@@ -170,5 +227,13 @@ void streamingWrapper(Cell* gridInput, Cell* gridOutput, int width, int height)
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y); // Number of blocks required to cover all grid
 
     streaming <<<gridSize, blockSize >>> (gridInput, gridOutput, width, height); // Start kernel
+    cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
+}
+
+void boundaryWrapper(Cell* grid, int width, int height)
+{
+    dim3 blockSize(16, 16);
+    dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y);
+    boundaryConditions << <gridSize, blockSize >> > (grid, width, height); // Start kernel
     cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }
