@@ -16,6 +16,8 @@ public:
 	CudaHandler(int width, int height);
 	~CudaHandler();
 
+	Cell* getGridInputPtr();
+
 	void allocateMemory(); // Initialization memory for GPU
 
 	// Data transfer GPU <-> CPU
