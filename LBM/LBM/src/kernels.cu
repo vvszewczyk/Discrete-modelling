@@ -1,4 +1,5 @@
 #include <cuda_runtime.h>
+#include <string>
 #include "device_launch_parameters.h"
 #include "Cell.h"
 #include "kernels.h"
@@ -73,7 +74,6 @@ __global__ void collision(Cell* grid, int width, int height, double tau)
     cell.setUx(ux);
     cell.setUy(uy);
 
-    // Calculate f_eq
     // f_i^{eq} = w_i * rho * [1 + 3(c_i.u) + 4.5(c_i.u)^2 - 1.5 * (u^2)]
     for (int i = 0; i < Q9; ++i)
     {
@@ -189,7 +189,7 @@ __global__ void boundaryConditions(Cell* grid, int width, int height)
     if (isLeft || isRight) 
     {
         double alpha = (double)y / (double)(height - 1);
-        uxBC = 0.0 + (0.02 - 0.0) * alpha; // growing from 0.0 (y=0) to 0.02 (y=height-1)
+        uxBC = 0.02 * alpha; // growing from 0.0 (y=0) to 0.02 (y=height-1)
         uyBC = 0.0;
     }
 
@@ -198,19 +198,126 @@ __global__ void boundaryConditions(Cell* grid, int width, int height)
     cell.setUy(uyBC);
 
     // f_i^eq = w_i * rhoBC * [1 + 3(c_i·uBC) + 4.5(c_i·uBC)^2 - 1.5(uBC^2)]
-    // Overriting f_out[i] = feq[i], becuase we set boundary condition
-    double ux2 = uxBC * uxBC;
-    double uy2 = uyBC * uyBC;
-    double uu = ux2 + uy2;
+    // Overriting f_out[i] = feq[i]
+    double uu = uxBC * uxBC;
 
     for (int i = 0; i < Q9; ++i)
     {
-        double cidotU = (double)cx[i] * uxBC + (double)cy[i] * uyBC; // c_i · u
-        double feq = w[i] * rhoBC * (1.0 + 3.0 * cidotU + 4.5 * (cidotU * cidotU) - 1.5 * uu);
+        double ciU = (double)cx[i] * uxBC + (double)cy[i] * uyBC; // c_i · u
+        double feq = w[i] * rhoBC * (1.0 + 3.0 * ciU + 4.5 * (ciU * ciU) - 1.5 * uu);
         cell.setF_out(i, feq);
     }
 }
 
+__global__ void boundaryConditions2(Cell* grid, int width, int height)
+{
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x >= width || y >= height)
+        return;
+
+    bool isBottom = (y == 0);
+    bool isTop = (y == height - 1);
+    bool isLeft = (x == 0);
+    bool isRight = (x == width - 1);
+
+    if (!isBottom && !isTop && !isLeft && !isRight)
+        return;
+
+    int idx = y * width + x;
+    Cell& cell = grid[idx];
+
+    // 1) BOUNCE-BACK on bottom
+    if (isBottom)
+    {
+        // veolcity (u=0)
+        double rhoBC = 1.0;
+        double uxBC = 0.0;
+        double uyBC = 0.0;
+
+        cell.setRho(rhoBC);
+        cell.setUx(uxBC);
+        cell.setUy(uyBC);
+
+        // f_out[i] = f_eq(rhoBC, u=0)
+        double uu = 0.0;
+        for (int i = 0; i < Q9; ++i)
+        {
+            double ciU = 0.0; // u=0
+            double feq = w[i] * rhoBC * (1.0 + 3.0 * ciU + 4.5 * (ciU * ciU) - 1.5 * uu);
+            cell.setF_out(i, feq);
+        }
+        return;
+    }
+
+    // 2) SYMETRY on top
+    if (isTop)
+    {
+
+        double rhoBC = 1.0;
+        double uxBC = cell.getUx();
+        double uyBC = 0.0;
+        cell.setRho(rhoBC);
+        cell.setUx(uxBC);
+        cell.setUy(uyBC);
+
+        // f_out[i] = feq(rhoBC, [uxBC,0]).
+        double uu = uxBC * uxBC;
+        for (int i = 0; i < Q9; i++)
+        {
+            double cidotU = cx[i] * uxBC;
+            double feq = w[i] * rhoBC * (1 + 3 * cidotU + 4.5 * (cidotU * cidotU) - 1.5 * uu);
+            cell.setF_out(i, feq);
+        }
+        return;
+    }
+
+    // 3) OPEN - left (0 -> 0.02)
+    if (isLeft)
+    {
+        double alpha = (double)y / (double)(height - 1);
+        double uWanted = 0.02 * alpha;
+        double rhoBC = 1.0;
+        double uxBC = uWanted;
+        double uyBC = 0.0;
+
+        cell.setRho(rhoBC);
+        cell.setUx(uxBC);
+        cell.setUy(uyBC);
+
+        // f_out = feq(rhoBC, uxBC, 0)
+        double uu = uxBC * uxBC;
+        for (int i = 0; i < Q9; i++)
+        {
+            double ciU = cx[i] * uxBC;
+            double feq = w[i] * rhoBC * (1 + 3 * ciU + 4.5 * (ciU * ciU) - 1.5 * uu);
+            cell.setF_out(i, feq);
+        }
+        return;
+    }
+
+    // 4) OUTFLOW - right
+    if (isRight)
+    {
+        double rhoBC = 1.0;
+        double uxBC = 0.0;
+        double uyBC = 0.0;
+
+        cell.setRho(rhoBC);
+        cell.setUx(uxBC);
+        cell.setUy(uyBC);
+
+        double uu = uxBC * uxBC + uyBC * uyBC;
+        for (int i = 0; i < Q9; i++)
+        {
+            double ciU = cx[i] * uxBC + cy[i] * uyBC;
+            double feq = w[i] * rhoBC * (1 + 3 * ciU + 4.5 * (ciU * ciU) - 1.5 * uu);
+            cell.setF_out(i, feq);
+        }
+        return;
+    }
+}
 
 void collisionWrapper(Cell* grid, int width, int height, double tau)
 {
@@ -230,10 +337,17 @@ void streamingWrapper(Cell* gridInput, Cell* gridOutput, int width, int height)
     cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }
 
-void boundaryWrapper(Cell* grid, int width, int height)
+void boundaryWrapper(Cell* grid, int width, int height, std::string variant)
 {
     dim3 blockSize(16, 16);
     dim3 gridSize((width + blockSize.x - 1) / blockSize.x, (height + blockSize.y - 1) / blockSize.y);
-    boundaryConditions << <gridSize, blockSize >> > (grid, width, height); // Start kernel
+    if(variant == "Variant 1")
+    {
+        boundaryConditions << <gridSize, blockSize >> > (grid, width, height); // Start kernel
+    }
+    else
+    {
+        boundaryConditions2 << <gridSize, blockSize >> > (grid, width, height); // Start kernel
+    }
     cudaDeviceSynchronize(); // CPU waits for GPU (synchronization, something like join)
 }
