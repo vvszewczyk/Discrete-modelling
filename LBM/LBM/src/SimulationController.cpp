@@ -10,7 +10,7 @@ SimulationController::SimulationController(Grid* g, CudaHandler* ch, int width, 
 {
 	controller = this;
 	this->buttonLabelSS = "Start";
-	this->buttonLabelWE = "Wall";
+	this->buttonLabelWE = "Variant 1";
 };
 
 SimulationController::~SimulationController() {}
@@ -39,7 +39,7 @@ void SimulationController::toggleSimulation()
 void SimulationController::toggleWallPlacement()
 {
 	this->placingWalls = !placingWalls;
-	this->buttonLabelWE = placingWalls ? "Empty" : "Wall";
+	this->buttonLabelWE = placingWalls ? "Variant 2" : "Variant 1";
 }
 
 void SimulationController::resetSimulation()
@@ -47,6 +47,7 @@ void SimulationController::resetSimulation()
 	this->isRunning = false;
 	this->grid->initialize();
 	this->buttonLabelSS = "Start";
+	this->buttonLabelWE = "Variant 1";
 	this->totalIterations = 0;
 
 	this->cudaHandler->initializeDeviceGrids(this->grid->getGridData());
@@ -127,10 +128,18 @@ void SimulationController::displayMain()
 			}
 			else
 			{
+				// Deviation from 1
 				double rho = cell.getRho();
-				double val = rho;
-				if (val > 1.0) val = 1.0;
+				double base_rho = 1.0;
+				double scale = 50.0;
+
+				double val = (rho - base_rho) * scale + 0.5;
+				// val ~ 0.5, if rho == base_rho
+				// val ~ 1.0, if rho == 1.01
+				// val ~ 0.0, if rho == 0.99
+
 				if (val < 0.0) val = 0.0;
+				if (val > 1.0) val = 1.0;
 				glColor3f(static_cast<GLfloat>(val), static_cast<GLfloat>(val), static_cast<GLfloat>(val));
 			}
 
@@ -448,7 +457,7 @@ void SimulationController::updateSimulation()
 		// No need to copy grid to GPU, kernels work directly on iy
 		this->cudaHandler->executeCollision(this->tau);
 
-		boundaryWrapper(this->cudaHandler->getGridInputPtr(), this->grid->getWidth(), this->grid->getHeight());
+		boundaryWrapper(this->cudaHandler->getGridInputPtr(), this->grid->getWidth(), this->grid->getHeight(), this->buttonLabelWE);
 
 		this->cudaHandler->executeStreaming();
 	}
