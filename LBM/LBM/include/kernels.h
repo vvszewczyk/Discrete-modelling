@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Cell.h"
+#include <string>
 
 const int Q9 = 9; // Number of directions D2Q9
 
@@ -19,4 +20,4 @@ __device__ __host__ int findOpposite(int i); // Find opposite direction based on
 // Wrapper functions to call from host code
 void collisionWrapper(Cell* d_grid, int width, int height, double tau);
 void streamingWrapper(Cell* d_gridInput, Cell* d_gridOutput, int width, int height);
-void boundaryWrapper(Cell* grid, int width, int height);
+void boundaryWrapper(Cell* grid, int width, int height, std::string variant);
