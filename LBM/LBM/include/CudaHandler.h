@@ -1,34 +1,34 @@
 #pragma once
 
-#include <vector>
 #include "Cell.h"
+#include <vector>
 
 class CudaHandler
 {
-private:
-	Cell* gridInput; // input for GPU
-	Cell* gridOutput; // output for GPU
+  private:
+    Cell *gridInput;  // input for GPU
+    Cell *gridOutput; // output for GPU
 
-	int gridWidth;
-	int gridHeight;
+    int gridWidth;
+    int gridHeight;
 
-public:
-	CudaHandler(int width, int height);
-	~CudaHandler();
+  public:
+    CudaHandler(int width, int height);
+    ~CudaHandler();
 
-	Cell* getGridInputPtr();
+    Cell *getGridInputPtr();
 
-	void allocateMemory(); // Initialization memory for GPU
+    void allocateMemory(); // Initialization memory for GPU
 
-	// Data transfer GPU <-> CPU
-	void copyGridToGPU(const Cell* grid);
-	void copyGridToCPU(Cell* rid);
+    // Data transfer GPU <-> CPU
+    void copyGridToGPU(const Cell *grid);
+    void copyGridToCPU(Cell *rid);
 
-	// Trigger kernels
-	void executeCollision(double tau);
-	void executeStreaming();
+    // Trigger kernels
+    void executeCollision(double tau);
+    void executeStreaming();
 
-	void freeMemory(); // Free GPU memory
+    void freeMemory(); // Free GPU memory
 
-	void initializeDeviceGrids(const Cell* grid); // Copy both input and output grids on GPU
+    void initializeDeviceGrids(const Cell *grid); // Copy both input and output grids on GPU
 };
