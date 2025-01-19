@@ -13,6 +13,7 @@ class Cell
     double rho;      // Density, for difusion it was C - concentration
     double ux;       // Velocity x
     double uy;       // Velocity y
+
   public:
     __host__ __device__ Cell(bool w = false) : isWall(w), rho(0.0), ux(0.0), uy(0.0)
     {
