@@ -69,19 +69,17 @@ void Grid::initialize(bool defaultWall)
                 cell.setF_out(i, feq);
             }
 
-            /*if (x == 0 || x == this->width - 1 || y == 0 || y == this->height - 1)
-            {
-                cell.setWall(true);
-            }
-
+            // Set the wall on the middle
             int wallColumn = this->width / 2;
-            int gapStart = this->height / 3;
-            int gapEnd = 2 * this->height / 3;
+            int gapStart = this->height / 2;
+            int gapEnd = 5 * this->height / 3;
 
             if (x == wallColumn && (y < gapStart || y > gapEnd))
             {
                 cell.setWall(true);
-            }*/
+                cell.setUx(0.0);
+                cell.setUy(0.0);
+            }
         }
     }
 }
