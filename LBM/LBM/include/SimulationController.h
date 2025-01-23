@@ -51,10 +51,11 @@ class SimulationController
     void toggleVariant();
     void resetSimulation();
 
-    void initializeUI(int argc, char **argv);              // Initialise UI, set OpenGL and GLUT
-    static void displayMain();                             // Draw main window
-    static void displayUx();                               // Draw X velocioty window
-    static void displayUy();                               // Draw Y velocioty window
+    void initializeUI(int argc, char **argv); // Initialise UI, set OpenGL and GLUT
+    static void displayMain();                // Draw main window
+    static void displayUx();                  // Draw X velocioty window
+    static void displayUy();                  // Draw Y velocioty window
+    static void displayVelocity(bool isUx);
     static void reshape(int w, int h);                     // Change size of window
     static void keyboard(unsigned char key, int x, int y); // Keyboard input operation
 
