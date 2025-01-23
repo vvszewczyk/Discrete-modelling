@@ -115,7 +115,7 @@ __global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int heig
     outCell.setUx(inCell.getUx());
     outCell.setUy(inCell.getUy());
 
-    // For each f_in in outCell, we look for where f_out comes from:
+    // For each f_in in outCell, we look for where f_out comes from
     for (int i = 0; i < Q9; ++i)
     {
         // Coordinates of neighbour cell
@@ -128,14 +128,21 @@ __global__ void streaming(Cell* gridInput, Cell* gridOutput, int width, int heig
 
         if (nx < 0 || nx >= width || ny < 0 || ny >= height)
         {
-            // np. outflow 
-            f_inVal = 0.0;
+            f_inVal = 0.0; // Outflow
         }
         else
         {
             int neighborIdx = ny * width + nx;
             const Cell& neighborCell = gridInput[neighborIdx];
-            f_inVal = neighborCell.getF_out(i);
+            if (neighborCell.getWall()) 
+            {
+                int opp = findOpposite(i);
+                f_inVal = neighborCell.getF_out(opp);
+            }
+            else 
+            {
+                f_inVal = neighborCell.getF_out(i);
+            }
         }
 
 
