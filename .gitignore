@@ -10,6 +10,8 @@
 *.userosscache
 *.sln.docstates
 *.sln
+*.csv
+*.bmp
 
 # Libraries
 freeglut/
@@ -17,6 +19,7 @@ glew-2.2.0/
 LGA.vcxproj
 LGA.sln
 *.dll
+stb_image_write.h
 
 
 # User-specific files (MonoDevelop/Xamarin Studio)

@@ -26,7 +26,9 @@
     <ClInclude Include="include\CudaHandler.h" />
     <ClInclude Include="include\Grid.h" />
     <ClInclude Include="include\kernels.h" />
+    <ClInclude Include="include\Particle.h" />
     <ClInclude Include="include\SimulationController.h" />
+    <ClInclude Include="include\stb_image_write.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{55135583-788e-4953-9f03-97710af19881}</ProjectGuid>
