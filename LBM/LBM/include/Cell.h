@@ -8,8 +8,7 @@ class Cell
     bool isWall;
     double f_in[9];  // Input values ​​of the distribution function for 4 directions
     double f_out[9]; // Output values ​​of the distribution function for 4 directions
-    double f_eq[9];  // Values ​​of the equilibrium distribution function for 4 directions (tr: equilibrium distribution
-                     // - rozklad rownowagowy)
+    double f_eq[9];  // Values ​​of the equilibrium distribution function for 4 directions
     double rho;      // Density, for difusion it was C - concentration
     double ux;       // Velocity x
     double uy;       // Velocity y
