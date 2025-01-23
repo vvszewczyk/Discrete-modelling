@@ -25,8 +25,4 @@ class Grid
 
     void initialize(bool defaultWall = false); // Initiallize grid with cells (walls, particles etc.)
     void resetGrid();                          // Reset all directions on the whole grid
-
-    // Sequential versions:
-    // void collision();
-    // void streaming();
 };
