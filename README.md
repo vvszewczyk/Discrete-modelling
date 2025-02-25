@@ -20,7 +20,8 @@ Each project is implemented using **Python** or **C++ with CUDA** to leverage GP
 - **1D Cellular Automata** *(Python - `contextual and morphological transformations/`)*  
   Generates patterns based on simple one-dimensional automata rules.  
   <div align="center">
-      <img src="media/1d_ca.png">
+      <img src="media/1d1.png">
+      <img src="media/1d2.png">
   </div>  
 - **2D Cellular Automata - Conway's Game of Life** *(Python - `CA - Conway's Game of Life/`)*  
   A simulation of John Conway’s famous Game of Life.  
@@ -61,9 +62,3 @@ Each project is implemented using **Python** or **C++ with CUDA** to leverage GP
   <div align="center">
       <img src="media/particles.gif">
   </div>  
-
-## Getting Started  
-To run the projects:  
-1. **Python Projects:** Install dependencies using:  
-   ```sh
-   pip install -r requirements.txt
