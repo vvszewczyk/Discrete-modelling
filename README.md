@@ -40,7 +40,7 @@ Each project is implemented using **Python** or **C++ with CUDA** to leverage GP
 - **Lattice Gas Automata (LGA) Simulation** *(C++ with CUDA - `LGA/`)*  
   Simulates gas flow using cellular automata principles.  
   <div align="center">
-      <img src="media/LGA.gif" width="1000">
+      <img src="media/LGA.gif" width="800">
   </div>  
 - **Diffusion Simulation with LBM** *(C++ with CUDA - `LBM/`)*  
   Models diffusion using the Lattice Boltzmann Method.  
